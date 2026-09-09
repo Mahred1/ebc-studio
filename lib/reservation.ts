@@ -1,6 +1,7 @@
 // Shape + validation rules for a studio spot reservation.
-// Kept free of React so the same rules can run again on the server once a
-// backend exists — never trust the client-side pass alone.
+// Kept free of React so the same rules run on both sides of the wire: the form
+// uses them for live feedback, and the server action in `lib/reservations.ts`
+// re-runs validateReservation() before writing — never trust the client pass.
 
 export const CHANNELS = [
   { value: "tv1", label: "TV1" },
@@ -126,10 +127,11 @@ export function channelLabel(value: Channel | ""): string | undefined {
 /**
  * Public reservation reference, e.g. RES-10001.
  *
- * The numeric part is a monotonic counter owned by the data layer — today the
- * stub in `reservation-store.ts`, later a DB sequence — so references are
- * unique by construction and need no collision retry. It's zero-padded to 5
- * digits but allowed to grow past that, so the pattern accepts 5 *or more*.
+ * The numeric part is a monotonic counter owned by the data layer — the
+ * `StudioReservation.referenceNo` Postgres sequence, seeded to start at 10001 —
+ * so references are unique by construction and need no collision retry. It's
+ * zero-padded to 5 digits but allowed to grow past that, so the pattern accepts
+ * 5 *or more*.
  */
 export const REFERENCE_PREFIX = "RES-"
 export const RESERVATION_ID_PATTERN = /^RES-\d{5,}$/i
@@ -211,3 +213,13 @@ export type ReservationView = {
   bid: string
   createdAt: string
 }
+
+/**
+ * Outcome of a create attempt. The server re-runs validateReservation() before
+ * it writes, so `errors` can come back populated even though the client already
+ * passed — that's the point. `message` carries a form-level failure (the write
+ * itself broke) that belongs to no single field.
+ */
+export type CreateReservationResult =
+  | { ok: true; reservation: ReservationView }
+  | { ok: false; errors: ReservationErrors; message?: string }

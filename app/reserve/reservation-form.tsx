@@ -42,7 +42,7 @@ import {
   type ReservationErrors,
   type ReservationView,
 } from "@/lib/reservation"
-import { createReservation } from "@/lib/reservation-store"
+import { createReservation } from "@/lib/reservations"
 
 type Touched = Partial<Record<keyof ReservationDraft, boolean>>
 
@@ -52,6 +52,7 @@ export function ReservationForm() {
   const [errors, setErrors] = React.useState<ReservationErrors>({})
   const [touched, setTouched] = React.useState<Touched>({})
   const [pending, setPending] = React.useState(false)
+  const [formError, setFormError] = React.useState<string | undefined>()
   const [submitted, setSubmitted] = React.useState<ReservationView | null>(null)
 
   const fieldRefs = React.useRef<
@@ -86,6 +87,7 @@ export function ReservationForm() {
 
     const nextErrors = validateReservation(draft)
     setErrors(nextErrors)
+    setFormError(undefined)
     setTouched(Object.fromEntries(RESERVATION_FIELDS.map((f) => [f, true])))
 
     const firstInvalid = RESERVATION_FIELDS.find((f) => nextErrors[f])
@@ -96,9 +98,23 @@ export function ReservationForm() {
 
     setPending(true)
     try {
-      // TODO: move to a server action that re-runs validateReservation() before
-      // persisting. Client-side validation alone is only a UX affordance.
-      setSubmitted(await createReservation(draft))
+      const result = await createReservation(draft)
+
+      if (result.ok) {
+        setSubmitted(result.reservation)
+        return
+      }
+
+      // The server re-validates before writing, so it can reject a draft this
+      // form thought was clean. Show whatever it sends back.
+      setErrors(result.errors)
+      setFormError(result.message)
+
+      const firstRejected = RESERVATION_FIELDS.find((f) => result.errors[f])
+      if (firstRejected) fieldRefs.current[firstRejected]?.focus()
+    } catch {
+      // The action never made it there and back (offline, server down).
+      setFormError("Something went wrong. Check your connection and try again.")
     } finally {
       setPending(false)
     }
@@ -109,6 +125,7 @@ export function ReservationForm() {
     setDraft(EMPTY_RESERVATION)
     setErrors({})
     setTouched({})
+    setFormError(undefined)
   }
 
   if (submitted) {
@@ -270,6 +287,15 @@ export function ReservationForm() {
           </FieldDescription>
           <FieldError id={`${id}-bid-error`}>{errors.bid}</FieldError>
         </Field>
+
+        {formError ? (
+          <p
+            role="alert"
+            className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            {formError}
+          </p>
+        ) : null}
 
         <Button type="submit" size="lg" disabled={pending} className="w-full">
           {pending && <LoaderCircleIcon className="animate-spin" />}

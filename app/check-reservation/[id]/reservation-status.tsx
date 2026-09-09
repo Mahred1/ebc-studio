@@ -7,7 +7,7 @@ import { LoaderCircleIcon, SearchXIcon } from "lucide-react"
 
 import { ReservationDetails } from "@/components/reservation-details"
 import { Button } from "@/components/ui/button"
-import { getReservation } from "@/lib/reservation-store"
+import { getReservation } from "@/lib/reservations"
 
 export function ReservationStatusFallback() {
   return (
