@@ -16,13 +16,12 @@ export function formatReservationDate(iso: string) {
   })
 }
 
-export function ReservationDetails({
+/** The full field list. Shared by the single-reservation card and the results accordion. */
+export function ReservationRows({
   reservation,
 }: {
   reservation: ReservationView
 }) {
-  const status = RESERVATION_STATUSES[reservation.status]
-
   const rows = [
     ["Name", reservation.fullName],
     ["Email", reservation.email],
@@ -33,6 +32,29 @@ export function ReservationDetails({
   ]
 
   return (
+    <dl className="mt-6 flex flex-col gap-2 border-t pt-4 text-sm">
+      {rows.map(([label, value]) => (
+        <div key={label} className="flex justify-between gap-4">
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className="text-right">{value}</dd>
+        </div>
+      ))}
+      <div className="flex flex-col gap-1 pt-2">
+        <dt className="text-muted-foreground">Goal</dt>
+        <dd>{reservation.goal}</dd>
+      </div>
+    </dl>
+  )
+}
+
+export function ReservationDetails({
+  reservation,
+}: {
+  reservation: ReservationView
+}) {
+  const status = RESERVATION_STATUSES[reservation.status]
+
+  return (
     <div className="w-full rounded-xl border bg-card p-6 shadow-sm sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="font-mono text-lg tracking-widest">{reservation.reference}</p>
@@ -41,18 +63,7 @@ export function ReservationDetails({
 
       <p className="mt-3 text-sm text-muted-foreground">{status.detail}</p>
 
-      <dl className="mt-6 flex flex-col gap-2 border-t pt-4 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">{label}</dt>
-            <dd className="text-right">{value}</dd>
-          </div>
-        ))}
-        <div className="flex flex-col gap-1 pt-2">
-          <dt className="text-muted-foreground">Goal</dt>
-          <dd>{reservation.goal}</dd>
-        </div>
-      </dl>
+      <ReservationRows reservation={reservation} />
     </div>
   )
 }

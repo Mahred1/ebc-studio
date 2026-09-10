@@ -1,7 +1,3 @@
-"use client"
-
-import * as React from "react"
-import { Suspense, use, useState } from "react"
 import Link from "next/link"
 import { LoaderCircleIcon, SearchXIcon } from "lucide-react"
 
@@ -22,14 +18,13 @@ export function ReservationStatusFallback() {
 }
 
 /**
- * Fetches a single reservation. The promise is created once per mount (the page
- * re-mounts us when the reference changes) and read with `use()`, so rendering
- * suspends into the parent <Suspense> until it resolves — no effect, no
- * setState-in-effect.
+ * Looks the reservation up on the server, so the result is in the HTML the
+ * browser receives — no client round trip after hydration, and the page works
+ * with JavaScript disabled. The page wraps this in <Suspense>, so the shell
+ * streams immediately and this swaps in when the query lands.
  */
-function ReservationStatusContent({ reference }: { reference: string }) {
-  const [promise] = useState(() => getReservation(reference))
-  const reservation = use(promise)
+export async function ReservationStatus({ reference }: { reference: string }) {
+  const reservation = await getReservation(reference)
 
   if (!reservation) {
     return (
@@ -38,23 +33,21 @@ function ReservationStatusContent({ reference }: { reference: string }) {
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">No reservation found</h2>
           <p className="text-sm text-muted-foreground">
-            We couldn&apos;t find a reservation with this reference.
+            We couldn&apos;t find a reservation with this reference. Check the
+            reference and try again.
           </p>
         </div>
-        <Button render={<Link href="/reserve" />} variant="outline" size="lg">
-          Reserve a spot
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button render={<Link href="/check-reservation" />} variant="outline" size="lg">
+            Try another reference
+          </Button>
+          <Button render={<Link href="/reserve" />} size="lg">
+            Reserve a spot
+          </Button>
+        </div>
       </div>
     )
   }
 
   return <ReservationDetails reservation={reservation} />
-}
-
-export function ReservationStatus({ reference }: { reference: string }) {
-  return (
-    <Suspense fallback={<ReservationStatusFallback />}>
-      <ReservationStatusContent reference={reference} />
-    </Suspense>
-  )
 }

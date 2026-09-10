@@ -42,7 +42,7 @@ import {
   type ReservationErrors,
   type ReservationView,
 } from "@/lib/reservation"
-import { createReservation } from "@/lib/reservations"
+import { createReservation } from "@/app/reserve/actions"
 
 type Touched = Partial<Record<keyof ReservationDraft, boolean>>
 

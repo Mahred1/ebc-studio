@@ -1,7 +1,8 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { ReservationStatus } from "./reservation-status"
+import { ReservationStatus, ReservationStatusFallback } from "./reservation-status"
 
 export const metadata: Metadata = {
   title: "Reservation Status | EBC Studio",
@@ -30,7 +31,9 @@ export default async function ReservationStatusPage({
           </p>
         </header>
 
-        <ReservationStatus reference={decodeURIComponent(id)} />
+        <Suspense fallback={<ReservationStatusFallback />}>
+          <ReservationStatus reference={decodeURIComponent(id)} />
+        </Suspense>
 
         <p className="text-center text-sm text-muted-foreground">
           <Link

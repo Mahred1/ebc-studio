@@ -21,7 +21,10 @@ export function CheckReservationForm() {
   const [query, setQuery] = React.useState("")
   const [error, setError] = React.useState<string | undefined>()
   const [touched, setTouched] = React.useState(false)
-  const [pending, setPending] = React.useState(false)
+  // The destination page queries the database while it renders, so navigation
+  // takes as long as that query. A transition keeps the button in its pending
+  // state for exactly that long, and resets it on its own when the route lands.
+  const [pending, startTransition] = React.useTransition()
 
   const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -43,8 +46,9 @@ export function CheckReservationForm() {
         ? reservationsByEmailHref(query)
         : reservationHref(query)
 
-    setPending(true)
-    router.push(href)
+    startTransition(() => {
+      router.push(href)
+    })
   }
 
   return (

@@ -1,12 +1,13 @@
-"use server"
-
-// Data access for studio reservations. Replaces the sessionStorage stub that
-// stood in for the backend — the function names and call sites are unchanged.
+// Data access for studio reservations.
 //
-// Every export here is a Server Action, so these run only on the server even
-// though client components call them directly. `createReservation` re-runs the
-// shared validation before it writes: the client-side pass is a UX affordance,
-// not a guarantee.
+// These run on the server only — they import the Prisma client, so pulling this
+// module into a client bundle fails the build. Reads are plain async functions
+// called during server rendering, NOT Server Actions: an action is a POST
+// endpoint meant for mutations, and exposing lookups as actions would both cost
+// a round trip after hydration and widen the app's surface for no reason.
+//
+// The one mutation, createReservation, lives in `app/reserve/actions.ts`
+// because a client component has to call it.
 
 import type { Prisma } from "@prisma/client"
 
@@ -14,9 +15,7 @@ import { prisma } from "@/lib/prisma"
 import {
   formatReference,
   parseReference,
-  validateReservation,
   type Channel,
-  type CreateReservationResult,
   type ReservationDraft,
   type ReservationView,
 } from "@/lib/reservation"
@@ -57,43 +56,33 @@ function toView(row: Row): ReservationView {
 }
 
 /** Emails are stored and queried lowercased so the `email` index does the work. */
-function normalizeEmail(email: string): string {
+export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
-export async function createReservation(
+/**
+ * Writes a reservation. Assumes the draft has already been validated — the
+ * action in `app/reserve/actions.ts` is the only caller and does that first.
+ */
+export async function insertReservation(
   draft: ReservationDraft
-): Promise<CreateReservationResult> {
-  const errors = validateReservation(draft)
-  if (Object.keys(errors).length > 0) {
-    return { ok: false, errors }
-  }
+): Promise<ReservationView> {
+  const row = await prisma.studioReservation.create({
+    data: {
+      fullName: draft.fullName.trim(),
+      email: normalizeEmail(draft.email),
+      // validateReservation() already rejected anything outside CHANNELS.
+      channel: draft.channel as Channel,
+      goal: draft.goal.trim(),
+      location: draft.location.trim(),
+      // Prisma parses the string into the Decimal(12,2) column, so the amount
+      // never passes through a float.
+      bid: draft.bid.trim(),
+    },
+    select: SELECT,
+  })
 
-  try {
-    const row = await prisma.studioReservation.create({
-      data: {
-        fullName: draft.fullName.trim(),
-        email: normalizeEmail(draft.email),
-        // validateReservation() already rejected anything outside CHANNELS.
-        channel: draft.channel as Channel,
-        goal: draft.goal.trim(),
-        location: draft.location.trim(),
-        // Prisma parses the string into the Decimal(12,2) column, so the amount
-        // never passes through a float.
-        bid: draft.bid.trim(),
-      },
-      select: SELECT,
-    })
-
-    return { ok: true, reservation: toView(row) }
-  } catch (error) {
-    console.error("createReservation failed", error)
-    return {
-      ok: false,
-      errors: {},
-      message: "We couldn't save your reservation. Please try again.",
-    }
-  }
+  return toView(row)
 }
 
 /** One reservation by its public reference. Null when nothing matches. */

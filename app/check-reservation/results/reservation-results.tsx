@@ -1,12 +1,14 @@
-"use client"
-
-import * as React from "react"
-import { Suspense, use, useState } from "react"
 import Link from "next/link"
-import { LoaderCircleIcon, SearchXIcon } from "lucide-react"
+import { ChevronDownIcon, LoaderCircleIcon, SearchXIcon } from "lucide-react"
 
-import { ReservationDetails } from "@/components/reservation-details"
+import {
+  ReservationDetails,
+  ReservationRows,
+  formatReservationDate,
+} from "@/components/reservation-details"
+import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import { Button } from "@/components/ui/button"
+import { channelLabel, RESERVATION_STATUSES } from "@/lib/reservation"
 import { getReservationsByEmail } from "@/lib/reservations"
 
 export function ReservationResultsFallback() {
@@ -22,14 +24,12 @@ export function ReservationResultsFallback() {
 }
 
 /**
- * Fetches with the email used to book. The promise is created once per mount —
- * the page mounts us under a `key` set to the email, so changing the email
- * re-creates it — and read with `use()`, suspending into the parent
- * <Suspense> until it resolves. No effect, no setState-in-effect.
+ * Queries on the server with the email used to book, so the results are in the
+ * HTML the browser receives. The page wraps this in <Suspense> keyed by email,
+ * so changing the email shows the fallback again instead of the stale list.
  */
-function ReservationResultsContent({ email }: { email: string }) {
-  const [promise] = useState(() => getReservationsByEmail(email))
-  const reservations = use(promise)
+export async function ReservationResults({ email }: { email: string }) {
+  const reservations = await getReservationsByEmail(email)
 
   if (!reservations.length) {
     return (
@@ -43,9 +43,14 @@ function ReservationResultsContent({ email }: { email: string }) {
               : "Add the email you booked with to see your reservations."}
           </p>
         </div>
-        <Button render={<Link href="/reserve" />} variant="outline" size="lg">
-          Reserve a spot
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button render={<Link href="/check-reservation" />} variant="outline" size="lg">
+            Try another email
+          </Button>
+          <Button render={<Link href="/reserve" />} size="lg">
+            Reserve a spot
+          </Button>
+        </div>
       </div>
     )
   }
@@ -57,21 +62,43 @@ function ReservationResultsContent({ email }: { email: string }) {
         {reservations.length === 1 ? "reservation" : "reservations"}, newest
         first.
       </p>
-      {reservations.map((reservation) => (
-        <ReservationDetails
-          key={reservation.reference}
-          reservation={reservation}
-        />
-      ))}
-    </div>
-  )
-}
+      {reservations.length === 1 ? (
+        <ReservationDetails reservation={reservations[0]} />
+      ) : (
+        // Native <details>. A shared `name` makes the group exclusive — opening
+        // one closes the rest — with no JS, so it also works before hydration.
+        reservations.map((reservation, index) => (
+          <details
+            key={reservation.reference}
+            name="reservation"
+            open={index === 0}
+            className="group w-full rounded-xl border bg-card shadow-sm"
+          >
+            <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-6 sm:p-8 [&::-webkit-details-marker]:hidden">
+              <div className="flex flex-col gap-1">
+                <p className="font-mono text-lg tracking-widest">
+                  {reservation.reference}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {channelLabel(reservation.channel) ?? reservation.channel} ·{" "}
+                  {formatReservationDate(reservation.createdAt)}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <ReservationStatusBadge status={reservation.status} />
+                <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+              </div>
+            </summary>
 
-export function ReservationResults({ email }: { email: string }) {
-  return (
-    <Suspense fallback={<ReservationResultsFallback />}>
-      {/* Remount per email so a changed email fetches a new promise. */}
-      <ReservationResultsContent key={email} email={email} />
-    </Suspense>
+            <div className="px-6 pb-6 sm:px-8 sm:pb-8">
+              <p className="text-sm text-muted-foreground">
+                {RESERVATION_STATUSES[reservation.status].detail}
+              </p>
+              <ReservationRows reservation={reservation} />
+            </div>
+          </details>
+        ))
+      )}
+    </div>
   )
 }

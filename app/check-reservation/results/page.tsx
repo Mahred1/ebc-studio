@@ -1,7 +1,8 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { ReservationResults } from "./reservation-results"
+import { ReservationResults, ReservationResultsFallback } from "./reservation-results"
 
 export const metadata: Metadata = {
   title: "Your Reservations | EBC Studio",
@@ -31,7 +32,11 @@ export default async function ReservationResultsPage({
           ) : null}
         </header>
 
-        <ReservationResults email={email ?? ""} />
+        {/* Keyed by email so a changed email re-suspends instead of showing
+            the previous email's results while the new query runs. */}
+        <Suspense key={email ?? ""} fallback={<ReservationResultsFallback />}>
+          <ReservationResults email={email ?? ""} />
+        </Suspense>
 
         <p className="text-center text-sm text-muted-foreground">
           <Link
