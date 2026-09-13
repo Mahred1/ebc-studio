@@ -10,10 +10,22 @@ import {
   type ReservationDraft,
 } from "@/lib/reservation"
 import { insertReservation } from "@/lib/reservations"
+import { getSiteSettings } from "@/lib/site-settings"
 
 export async function createReservation(
   draft: ReservationDraft
 ): Promise<CreateReservationResult> {
+  // Re-check the pause flag here, not just on the page: the form is hidden
+  // when paused, but anything can POST to an action. Pausing has to actually
+  // stop writes, or it's decoration.
+  if ((await getSiteSettings()).reservationsPaused) {
+    return {
+      ok: false,
+      errors: {},
+      message: "Reservations are paused right now — we're not accepting new bookings.",
+    }
+  }
+
   // Re-run the shared rules here. The form validates as you type, but that pass
   // is a UX affordance — anything can post to an action.
   const errors = validateReservation(draft)

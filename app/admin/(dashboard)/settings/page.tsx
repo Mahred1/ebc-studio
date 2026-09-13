@@ -4,8 +4,10 @@ import { cn } from "cn"
 import { Badge } from "@/components/ui/badge"
 import { requireAdmin } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getSiteSettings } from "@/lib/site-settings"
 import { AddAdminDialog } from "./add-admin-dialog"
 import { DeleteAdminButton } from "./delete-admin-button"
+import { ReservationsToggle } from "./reservations-toggle"
 
 export const metadata: Metadata = {
   title: "Settings | EBC Studio Admin",
@@ -18,6 +20,7 @@ export const dynamic = "force-dynamic"
 
 export default async function AdminSettingsPage() {
   const viewer = await requireAdmin()
+  const { reservationsPaused } = await getSiteSettings()
   const admins = await prisma.admin.findMany({
     select: { id: true, username: true, isPrimary: true, createdAt: true },
     orderBy: { id: "asc" },
@@ -34,6 +37,29 @@ export default async function AdminSettingsPage() {
         </div>
         <AddAdminDialog />
       </header>
+
+      <section className="overflow-hidden rounded-xl border bg-card">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b px-5 py-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-sm font-semibold">Reservations</h2>
+            <p className="text-sm text-muted-foreground">
+              Pause new bookings on the reserve page. Existing reservations can
+              still be looked up either way.
+            </p>
+          </div>
+          <ReservationsToggle paused={reservationsPaused} />
+        </div>
+        {reservationsPaused ? (
+          <p className="px-5 py-4 text-sm font-medium text-destructive">
+            Reservations are paused — the reserve form is hidden and new
+            submissions are rejected.
+          </p>
+        ) : (
+          <p className="px-5 py-4 text-sm text-muted-foreground">
+            Reservations are open. The reserve form is live on the public site.
+          </p>
+        )}
+      </section>
 
       <section className="overflow-hidden rounded-xl border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-4">

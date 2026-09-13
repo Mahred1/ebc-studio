@@ -54,6 +54,20 @@ model StudioReservation {
   @@index([channel])
 }
 
+/// Runtime flags for the public site. A single row (id 1, seeded by its
+/// migration) holds every site-wide switch; the reserve page reads
+/// `reservationsPaused` on every request and the settings toggle writes it.
+model SiteSettings {
+  id Int @id @default(1)
+
+  /// When true, the reserve form is replaced by a "paused" notice that points
+  /// existing bookers at the check-reservation flow. Reads are trusted on the
+  /// page and re-checked on the create action (the form hiding is not the gate).
+  reservationsPaused Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+}
+
 /// Staff account for /admin. There is no public signup route by design —
 /// accounts are created by an existing admin from /admin/settings, so the first
 /// row had to come from somewhere else (it was seeded by a CLI script that has

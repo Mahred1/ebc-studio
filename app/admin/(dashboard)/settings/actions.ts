@@ -8,6 +8,7 @@ import { hashPassword } from "@/lib/password"
 import { prisma } from "@/lib/prisma"
 
 const SETTINGS_PATH = "/admin/settings"
+const RESERVE_PATH = "/reserve"
 
 /** Postgres unique-violation, surfaced by Prisma. Checked structurally so this file needn't import Prisma's error classes. */
 function isUsernameTaken(error: unknown): boolean {
@@ -78,4 +79,24 @@ export async function deleteAdmin(formData: FormData): Promise<void> {
   // here rather than an unhandled error.
   await prisma.admin.deleteMany({ where: { id } })
   revalidatePath(SETTINGS_PATH)
+}
+
+/**
+ * Flips the site-wide reservations pause. Any admin can do it; the reserve
+ * page and the create action both re-read the flag from the database rather
+ * than trusting this call, so the toggle takes effect on the next request.
+ */
+export async function setReservationsPaused(paused: boolean): Promise<void> {
+  await requireAdmin()
+
+  await prisma.siteSettings.upsert({
+    where: { id: 1 },
+    update: { reservationsPaused: paused },
+    create: { reservationsPaused: paused },
+  })
+
+  revalidatePath(SETTINGS_PATH)
+  // The reserve page renders on the flag; without this it would serve stale
+  // output until some unrelated revalidation came along.
+  revalidatePath(RESERVE_PATH)
 }
