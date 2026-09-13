@@ -7,6 +7,7 @@ import {
   CalendarDays,
   LayoutGrid,
   Package,
+  Settings,
   Users,
 } from "lucide-react"
 import { cn } from "cn"
@@ -17,6 +18,7 @@ const links = [
   { href: "/admin/inventory", label: "Inventory", icon: Package },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
 
 export function AdminNav() {
