@@ -54,9 +54,11 @@ model StudioReservation {
   @@index([channel])
 }
 
-/// Staff account for /admin. There is no signup route by design — accounts are
-/// created from the CLI (`node scripts/create-admin.mts`), so this table stays
-/// small: no roles, no email, no password reset flow.
+/// Staff account for /admin. There is no public signup route by design —
+/// accounts are created by an existing admin from /admin/settings, so the first
+/// row had to come from somewhere else (it was seeded by a CLI script that has
+/// since been removed). No email and no password reset flow: the primary admin
+/// deletes an account and issues fresh credentials instead.
 model Admin {
   id Int @id @default(autoincrement())
 
@@ -65,6 +67,12 @@ model Admin {
 
   /// scrypt digest as "saltHex:keyHex" — see lib/password.ts. Never the raw password.
   passwordHash String
+
+  /// The one account that may delete admins. Every admin can *create* one.
+  /// Set on the oldest row by the add_admin_primary migration and never
+  /// written again — nothing in the app promotes or demotes, so "exactly one"
+  /// holds without a partial unique index.
+  isPrimary Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

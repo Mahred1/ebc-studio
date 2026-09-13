@@ -2,8 +2,8 @@
 //
 // scrypt from node:crypto — memory-hard, in the standard library, no native
 // build step. Runs on the server only (the login action and the create-admin
-// script); never import this from a client component or from middleware, which
-// has no node:crypto.
+// server action); never import this from a client component or from middleware,
+// which has no node:crypto.
 
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto"
 import { promisify } from "node:util"

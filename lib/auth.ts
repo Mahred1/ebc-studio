@@ -15,7 +15,7 @@ import {
   verifySession,
 } from "@/lib/session"
 
-export type Admin = { id: number; username: string }
+export type Admin = { id: number; username: string; isPrimary: boolean }
 
 /**
  * Where to send someone after login. Only paths inside /admin are honoured, so
@@ -56,7 +56,7 @@ export async function getAdmin(): Promise<Admin | null> {
 
   return prisma.admin.findUnique({
     where: { id: adminId },
-    select: { id: true, username: true },
+    select: { id: true, username: true, isPrimary: true },
   })
 }
 
