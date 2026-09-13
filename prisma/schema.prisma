@@ -1,8 +1,9 @@
 // ebc-studio — Prisma schema.
 //
-// Single model: StudioReservation. It mirrors the reserve form exactly (see
-// lib/reservation.ts) plus the fields a real reservation needs to be tracked:
-// a public reference, a review status, and audit timestamps.
+// Two models: StudioReservation mirrors the public reserve form (see
+// lib/reservation.ts) plus the fields a real reservation needs to be tracked —
+// a public reference, a review status, and audit timestamps. Admin backs the
+// staff login at /admin.
 
 generator client {
   provider = "prisma-client-js"
@@ -51,4 +52,20 @@ model StudioReservation {
   // scheduling.
   @@index([email])
   @@index([channel])
+}
+
+/// Staff account for /admin. There is no signup route by design — accounts are
+/// created from the CLI (`node scripts/create-admin.mts`), so this table stays
+/// small: no roles, no email, no password reset flow.
+model Admin {
+  id Int @id @default(autoincrement())
+
+  /// Stored lowercased; the login form lowercases what's typed before looking up.
+  username String @unique
+
+  /// scrypt digest as "saltHex:keyHex" — see lib/password.ts. Never the raw password.
+  passwordHash String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
