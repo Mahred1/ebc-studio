@@ -8,7 +8,7 @@ import {
 } from "@/components/reservation-details"
 import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import { Button } from "@/components/ui/button"
-import { channelLabel, RESERVATION_STATUSES } from "@/lib/reservation"
+import { RESERVATION_STATUSES } from "@/lib/reservation"
 import { getReservationsByEmail } from "@/lib/reservations"
 
 export function ReservationResultsFallback() {
@@ -80,7 +80,7 @@ export async function ReservationResults({ email }: { email: string }) {
                   {reservation.reference}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {channelLabel(reservation.channel) ?? reservation.channel} ·{" "}
+                  {reservation.channel} ·{" "}
                   {formatReservationDate(reservation.createdAt)}
                 </p>
               </div>

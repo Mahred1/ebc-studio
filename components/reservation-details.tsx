@@ -2,7 +2,6 @@ import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import {
   CURRENCY,
   RESERVATION_STATUSES,
-  channelLabel,
   type ReservationView,
 } from "@/lib/reservation"
 
@@ -25,7 +24,7 @@ export function ReservationRows({
   const rows = [
     ["Name", reservation.fullName],
     ["Email", reservation.email],
-    ["Channel", channelLabel(reservation.channel) ?? reservation.channel],
+    ["Channel", reservation.channel],
     ["Location", reservation.location],
     ["Bid", `${CURRENCY.symbol}${reservation.bid} ${CURRENCY.code}`],
     ["Submitted", formatReservationDate(reservation.createdAt)],

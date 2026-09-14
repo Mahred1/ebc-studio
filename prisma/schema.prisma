@@ -1,9 +1,11 @@
 // ebc-studio — Prisma schema.
 //
-// Two models: StudioReservation mirrors the public reserve form (see
+// Models: StudioReservation mirrors the public reserve form (see
 // lib/reservation.ts) plus the fields a real reservation needs to be tracked —
-// a public reference, a review status, and audit timestamps. Admin backs the
-// staff login at /admin.
+// a public reference, a review status, and audit timestamps. ChannelInventory
+// backs the admin channel list at /admin/inventory and feeds the reserve form's
+// channel dropdown. SiteSettings holds site-wide flags. Admin backs the staff
+// login at /admin.
 
 generator client {
   provider = "prisma-client-js"
@@ -34,7 +36,9 @@ model StudioReservation {
   // --- Reserve form fields (lib/reservation.ts / app/reserve/reservation-form.tsx) ---
   fullName String
   email    String
-  /// One of the values in CHANNELS (lib/reservation.ts): tv1 | tv2 | tv3 | news | entertainment.
+  /// One of the ChannelInventory names (the non-hidden set shown by the reserve
+  /// form). Stored as the display name, so past rows keep rendering even if a
+  /// channel is later hidden or renamed.
   channel  String
   goal     String
   location String
@@ -52,6 +56,24 @@ model StudioReservation {
   // scheduling.
   @@index([email])
   @@index([channel])
+}
+
+/// The channel inventory — the source of truth for the reserve form's channel
+/// dropdown. Seeded with the five channels the form used to hardcode; the admin
+/// adds, edits, hides and deletes rows under /admin/inventory. `name` is what a
+/// reservation stores in StudioReservation.channel, so renaming here doesn't
+/// rewrite history. `hidden` takes a channel off the dropdown without deleting
+/// past reservations. `addedBy` is a username snapshot (not an FK) so deleting
+/// an admin can't cascade here.
+model ChannelInventory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  addedBy   String
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hidden])
 }
 
 /// Runtime flags for the public site. A single row (id 1, seeded by its

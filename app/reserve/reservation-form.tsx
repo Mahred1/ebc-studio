@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  CHANNELS,
   CURRENCY,
   EMPTY_RESERVATION,
   GOAL_MAX,
@@ -37,16 +36,16 @@ import {
   reservationHref,
   validateField,
   validateReservation,
-  type Channel,
   type ReservationDraft,
   type ReservationErrors,
   type ReservationView,
 } from "@/lib/reservation"
+import type { ChannelOption } from "@/lib/channels"
 import { createReservation } from "@/app/reserve/actions"
 
 type Touched = Partial<Record<keyof ReservationDraft, boolean>>
 
-export function ReservationForm() {
+export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
   const id = React.useId()
   const [draft, setDraft] = React.useState<ReservationDraft>(EMPTY_RESERVATION)
   const [errors, setErrors] = React.useState<ReservationErrors>({})
@@ -186,11 +185,13 @@ export function ReservationForm() {
 
         <Field data-invalid={!!errors.channel}>
           <FieldLabel htmlFor={`${id}-channel`}>Channel</FieldLabel>
+          {/* items are the inventory channels the page fetched; membership is
+              re-checked server-side because this snapshot can go stale. */}
           <Select
-            items={CHANNELS}
+            items={channels}
             name="channel"
             value={draft.channel || null}
-            onValueChange={(value) => setField("channel", (value ?? "") as Channel | "")}
+            onValueChange={(value) => setField("channel", value ?? "")}
             onOpenChange={(open) => {
               if (!open) handleBlur("channel")
             }}
@@ -207,7 +208,7 @@ export function ReservationForm() {
               <SelectValue placeholder="Select a channel" />
             </SelectTrigger>
             <SelectContent>
-              {CHANNELS.map((channel) => (
+              {channels.map((channel) => (
                 <SelectItem key={channel.value} value={channel.value}>
                   {channel.label}
                 </SelectItem>

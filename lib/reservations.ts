@@ -15,7 +15,6 @@ import { prisma } from "@/lib/prisma"
 import {
   formatReference,
   parseReference,
-  type Channel,
   type ReservationDraft,
   type ReservationView,
 } from "@/lib/reservation"
@@ -47,7 +46,7 @@ function toView(row: Row): ReservationView {
     status: row.status,
     fullName: row.fullName,
     email: row.email,
-    channel: row.channel as Channel,
+    channel: row.channel,
     goal: row.goal,
     location: row.location,
     bid: row.bid.toFixed(2),
@@ -71,8 +70,8 @@ export async function insertReservation(
     data: {
       fullName: draft.fullName.trim(),
       email: normalizeEmail(draft.email),
-      // validateReservation() already rejected anything outside CHANNELS.
-      channel: draft.channel as Channel,
+      // The reserve action already checked this against the visible inventory.
+      channel: draft.channel.trim(),
       goal: draft.goal.trim(),
       location: draft.location.trim(),
       // Prisma parses the string into the Decimal(12,2) column, so the amount

@@ -3,22 +3,12 @@
 // uses them for live feedback, and the server action in `lib/reservations.ts`
 // re-runs validateReservation() before writing — never trust the client pass.
 
-export const CHANNELS = [
-  { value: "tv1", label: "TV1" },
-  { value: "tv2", label: "TV2" },
-  { value: "tv3", label: "TV3" },
-  { value: "news", label: "EBC News" },
-  { value: "entertainment", label: "EBC Entertainment" },
-] as const
-
-export type Channel = (typeof CHANNELS)[number]["value"]
-
 export const CURRENCY = { code: "ETB", symbol: "Br" } as const
 
 export type ReservationDraft = {
   fullName: string
   email: string
-  channel: Channel | ""
+  channel: string
   goal: string
   location: string
   bid: string
@@ -40,8 +30,6 @@ export const GOAL_MAX = 500
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const MONEY_PATTERN = /^\d+(\.\d{1,2})?$/
-
-const CHANNEL_VALUES: readonly string[] = CHANNELS.map((c) => c.value)
 
 /** Validates one field. Takes the whole draft so cross-field rules can be added later. */
 export function validateField(
@@ -66,8 +54,10 @@ export function validateField(
     }
 
     case "channel": {
+      // Membership against the live inventory is the server's call — the reserve
+      // action re-checks it against the database, since the dropdown this form
+      // renders is just the snapshot from the page request.
       if (!draft.channel) return "Pick the channel you want to record for."
-      if (!CHANNEL_VALUES.includes(draft.channel)) return "That channel is not available."
       return undefined
     }
 
@@ -116,10 +106,6 @@ export function validateReservation(draft: ReservationDraft): ReservationErrors 
     if (message) errors[field] = message
   }
   return errors
-}
-
-export function channelLabel(value: Channel | ""): string | undefined {
-  return CHANNELS.find((c) => c.value === value)?.label
 }
 
 /* ------------------------------------------------------------------ lookup */
@@ -207,7 +193,7 @@ export type ReservationView = {
   status: ReservationStatus
   fullName: string
   email: string
-  channel: Channel
+  channel: string
   goal: string
   location: string
   bid: string

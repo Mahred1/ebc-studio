@@ -4,6 +4,7 @@
 // the write has to be reachable from the browser. Lookups are plain server-side
 // reads in `lib/reservations.ts` and deliberately are NOT actions.
 
+import { getVisibleChannelNames } from "@/lib/channels"
 import {
   validateReservation,
   type CreateReservationResult,
@@ -31,6 +32,17 @@ export async function createReservation(
   const errors = validateReservation(draft)
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors }
+  }
+
+  // The channel rule is membership of the *live* inventory — the dropdown the
+  // page rendered is just the snapshot from that request. Check it again so a
+  // hidden or since-deleted channel can't slip through a crafted request.
+  const visible = new Set(await getVisibleChannelNames())
+  if (!visible.has(draft.channel)) {
+    return {
+      ok: false,
+      errors: { channel: "That channel is not available." },
+    }
   }
 
   try {
