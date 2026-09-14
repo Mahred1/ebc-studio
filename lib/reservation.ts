@@ -5,9 +5,15 @@
 
 export const CURRENCY = { code: "ETB", symbol: "Br" } as const
 
+/** Ethiopian country code. The form fixes it as a prefix; storage is +251 + 9 digits. */
+export const PHONE_PREFIX = "+251"
+/** Ethiopian national numbers are nine digits. */
+export const PHONE_DIGITS = 9
+
 export type ReservationDraft = {
   fullName: string
   email: string
+  phone: string
   channel: string
   goal: string
   location: string
@@ -19,6 +25,7 @@ export type ReservationErrors = Partial<Record<keyof ReservationDraft, string>>
 export const EMPTY_RESERVATION: ReservationDraft = {
   fullName: "",
   email: "",
+  phone: "",
   channel: "",
   goal: "",
   location: "",
@@ -50,6 +57,15 @@ export function validateField(
       const email = draft.email.trim()
       if (!email) return "Email is required."
       if (!EMAIL_PATTERN.test(email)) return "Enter a valid email, like name@example.com."
+      return undefined
+    }
+
+    case "phone": {
+      // The +251 prefix is fixed by the form; the input holds the 9 local digits.
+      const digits = draft.phone.replace(/\D/g, "")
+      if (!digits) return "Add your phone number so we can reach you."
+      if (digits.length !== PHONE_DIGITS)
+        return `Use the ${PHONE_DIGITS} digits after +251.`
       return undefined
     }
 
@@ -92,6 +108,7 @@ export function validateField(
 export const RESERVATION_FIELDS = [
   "fullName",
   "email",
+  "phone",
   "channel",
   "goal",
   "location",
@@ -106,6 +123,25 @@ export function validateReservation(draft: ReservationDraft): ReservationErrors 
     if (message) errors[field] = message
   }
   return errors
+}
+
+/* ------------------------------------------------------------------- phone */
+
+/** Canonical stored form: +251 + 9 digits, no spaces. Validation already guaranteed the length. */
+export function normalizePhone(phone: string): string {
+  return `${PHONE_PREFIX}${phone.replace(/\D/g, "")}`
+}
+
+/** Keeps digits only (max 9) and groups them "9XX XXX XXX" as the user types. */
+export function formatPhoneInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, PHONE_DIGITS)
+  return digits.replace(/(\d{3})(?=\d)/g, "$1 ")
+}
+
+/** "+251912345678" → "+251 912 345 678", for display. */
+export function formatPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "").replace(/^251/, "")
+  return `${PHONE_PREFIX} ${digits.replace(/(\d{3})(?=\d)/g, "$1 ")}`.trim()
 }
 
 /* ------------------------------------------------------------------ lookup */
@@ -193,6 +229,7 @@ export type ReservationView = {
   status: ReservationStatus
   fullName: string
   email: string
+  phone: string | null
   channel: string
   goal: string
   location: string

@@ -32,7 +32,9 @@ import {
   CURRENCY,
   EMPTY_RESERVATION,
   GOAL_MAX,
+  PHONE_PREFIX,
   RESERVATION_FIELDS,
+  formatPhoneInput,
   reservationHref,
   validateField,
   validateReservation,
@@ -196,6 +198,36 @@ export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
             We&apos;ll send your reservation reference here.
           </FieldDescription>
           <FieldError id={`${id}-email-error`}>{errors.email}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.phone}>
+          <FieldLabel htmlFor={`${id}-phone`}>Phone number</FieldLabel>
+          {/* +251 is fixed: the input holds only the 9 local digits, grouped
+              "9XX XXX XXX" as they're typed. */}
+          <InputGroup>
+            <InputGroupAddon>
+              <InputGroupText>{PHONE_PREFIX}</InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              id={`${id}-phone`}
+              ref={(el) => {
+                fieldRefs.current.phone = el
+              }}
+              name="phone"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              placeholder="9XX XXX XXX"
+              value={draft.phone}
+              aria-invalid={!!errors.phone}
+              aria-describedby={errors.phone ? `${id}-phone-error` : undefined}
+              onChange={(e) => setField("phone", formatPhoneInput(e.target.value))}
+              onBlur={() => handleBlur("phone")}
+            />
+          </InputGroup>
+          <FieldDescription>
+            We&apos;ll use this to reach you about your reservation.
+          </FieldDescription>
+          <FieldError id={`${id}-phone-error`}>{errors.phone}</FieldError>
         </Field>
 
         <Field data-invalid={!!errors.channel}>

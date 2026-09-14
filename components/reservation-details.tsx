@@ -2,6 +2,7 @@ import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import {
   CURRENCY,
   RESERVATION_STATUSES,
+  formatPhone,
   type ReservationView,
 } from "@/lib/reservation"
 
@@ -24,6 +25,7 @@ export function ReservationRows({
   const rows = [
     ["Name", reservation.fullName],
     ["Email", reservation.email],
+    ["Phone", reservation.phone ? formatPhone(reservation.phone) : "—"],
     ["Channel", reservation.channel],
     ["Location", reservation.location],
     ["Bid", `${CURRENCY.symbol}${reservation.bid} ${CURRENCY.code}`],

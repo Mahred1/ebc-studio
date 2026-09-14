@@ -36,6 +36,10 @@ model StudioReservation {
   // --- Reserve form fields (lib/reservation.ts / app/reserve/reservation-form.tsx) ---
   fullName String
   email    String
+  /// Ethiopian phone in canonical +251 + 9-digits form (normalizePhone in
+  /// lib/reservation.ts). Nullable: rows booked before the column existed keep
+  /// null and display "—"; new reservations must provide it.
+  phone    String?
   /// One of the ChannelInventory names (the non-hidden set shown by the reserve
   /// form). Stored as the display name, so past rows keep rendering even if a
   /// channel is later hidden or renamed.

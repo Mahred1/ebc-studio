@@ -14,6 +14,7 @@ import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import {
   formatReference,
+  normalizePhone,
   parseReference,
   type ReservationDraft,
   type ReservationView,
@@ -25,6 +26,7 @@ const SELECT = {
   status: true,
   fullName: true,
   email: true,
+  phone: true,
   channel: true,
   goal: true,
   location: true,
@@ -46,6 +48,7 @@ function toView(row: Row): ReservationView {
     status: row.status,
     fullName: row.fullName,
     email: row.email,
+    phone: row.phone,
     channel: row.channel,
     goal: row.goal,
     location: row.location,
@@ -70,6 +73,7 @@ export async function insertReservation(
     data: {
       fullName: draft.fullName.trim(),
       email: normalizeEmail(draft.email),
+      phone: normalizePhone(draft.phone),
       // The reserve action already checked this against the visible inventory.
       channel: draft.channel.trim(),
       goal: draft.goal.trim(),
