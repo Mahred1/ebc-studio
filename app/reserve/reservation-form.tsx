@@ -58,12 +58,24 @@ export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
     Partial<Record<keyof ReservationDraft, HTMLElement | null>>
   >({})
 
+  // The latest draft, read by blur validation. The Select's close event — which
+  // is this form's blur for the channel field — fires in the same event batch
+  // as the selection, so `handleBlur` would otherwise validate the *old* draft
+  // (channel still "") and wrongly flag it. setField mirrors synchronously so
+  // the blur always sees the value just picked; the effect keeps it in sync
+  // with any direct setDraft (the reset).
+  const draftRef = React.useRef(draft)
+  React.useEffect(() => {
+    draftRef.current = draft
+  }, [draft])
+
   // Re-validate as the user types, but only once they've left the field — so the
   // first keystroke in an empty field doesn't immediately read as an error.
   function setField<K extends keyof ReservationDraft>(
     field: K,
     value: ReservationDraft[K]
   ) {
+    draftRef.current = { ...draftRef.current, [field]: value }
     setDraft((prev) => {
       const next = { ...prev, [field]: value }
       if (touched[field]) {
@@ -78,7 +90,10 @@ export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
 
   function handleBlur(field: keyof ReservationDraft) {
     setTouched((prev) => ({ ...prev, [field]: true }))
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, draft) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, draftRef.current),
+    }))
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
