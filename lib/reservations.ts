@@ -13,12 +13,14 @@ import type { Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/prisma"
 import {
+  aggregateCustomers,
   formatReference,
   normalizePhone,
   parseReference,
   type ReservationDraft,
   type ReservationView,
 } from "@/lib/reservation"
+import type { CustomerView } from "@/lib/reservation"
 
 /** The columns a ReservationView needs — `id` is internal and stays server-side. */
 const SELECT = {
@@ -119,4 +121,36 @@ export async function getReservationsByEmail(
   })
 
   return rows.map(toView)
+}
+
+/* ----------------------------------------------------------------- customers */
+
+/**
+ * Every customer, one row per booking email, for the /admin/customers table.
+ * Fetches the reservations newest-first and lets aggregateCustomers() (the pure
+ * roll-up in lib/reservation.ts) do the rest.
+ */
+export async function getCustomers(): Promise<CustomerView[]> {
+  const rows = await prisma.studioReservation.findMany({
+    select: {
+      email: true,
+      fullName: true,
+      phone: true,
+      bid: true,
+      status: true,
+      createdAt: true,
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+  })
+
+  return aggregateCustomers(
+    rows.map((row) => ({
+      email: row.email,
+      fullName: row.fullName,
+      phone: row.phone,
+      bid: Number(row.bid),
+      status: row.status,
+      createdAt: row.createdAt.toISOString(),
+    }))
+  )
 }

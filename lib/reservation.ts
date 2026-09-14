@@ -144,6 +144,87 @@ export function formatPhone(phone: string): string {
   return `${PHONE_PREFIX} ${digits.replace(/(\d{3})(?=\d)/g, "$1 ")}`.trim()
 }
 
+/* --------------------------------------------------------------- customers */
+
+/**
+ * A customer's standing on the admin Customers page. A customer is the email
+ * on their reservations — there is no separate table, so every figure here is
+ * derived live from StudioReservation. name/phone are the latest reservation's
+ * values; totalBid is the sum across all reservations (integer-cents exact);
+ * status reflects the most urgent open booking, if any.
+ */
+export type CustomerStatus = "pending" | "active" | "inactive"
+
+export type CustomerView = {
+  email: string
+  name: string
+  phone: string | null
+  reservationCount: number
+  totalBid: string
+  status: CustomerStatus
+  lastReservedAt: string
+}
+
+/** The plain rows aggregateCustomers() consumes — bid is already a number. */
+type CustomerReservation = {
+  email: string
+  fullName: string
+  phone: string | null
+  bid: number
+  status: string
+  createdAt: string
+}
+
+/**
+ * Rolls reservations up into per-email customers. Pure + order-independent:
+ * name/phone/lastReservedAt come from the newest reservation (compared by ISO
+ * string, which sorts lexically), the bid sum accumulates in integer cents so
+ * it never drifts, and status is "pending" if any is pending, else "active" if
+ * any is confirmed, else "inactive".
+ */
+export function aggregateCustomers(
+  reservations: CustomerReservation[]
+): CustomerView[] {
+  const byEmail = new Map<string, CustomerView>()
+
+  for (const r of reservations) {
+    let customer = byEmail.get(r.email)
+
+    if (!customer) {
+      customer = {
+        email: r.email,
+        name: r.fullName,
+        phone: r.phone,
+        reservationCount: 0,
+        totalBid: "0.00",
+        status: "inactive",
+        lastReservedAt: r.createdAt,
+      }
+      byEmail.set(r.email, customer)
+    }
+
+    // Name and phone follow the newest reservation; comparing ISO strings
+    // makes this work regardless of the order rows arrive in.
+    if (r.createdAt > customer.lastReservedAt) {
+      customer.name = r.fullName
+      customer.phone = r.phone
+      customer.lastReservedAt = r.createdAt
+    }
+
+    customer.reservationCount += 1
+    // Sum in cents as integers so decimal drift can't skew lifetime value.
+    const cents =
+      Math.round(Number(customer.totalBid) * 100) + Math.round(r.bid * 100)
+    customer.totalBid = `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, "0")}`
+
+    if (r.status === "pending") customer.status = "pending"
+    else if (customer.status === "inactive" && r.status === "confirmed")
+      customer.status = "active"
+  }
+
+  return [...byEmail.values()]
+}
+
 /* ------------------------------------------------------------------ lookup */
 
 /**
