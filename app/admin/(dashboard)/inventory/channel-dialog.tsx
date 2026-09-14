@@ -37,19 +37,28 @@ function ChannelFormDialog({
   const id = React.useId()
   const [value, setValue] = React.useState(name)
   const [state, setState] = React.useState<ChannelActionState>({})
+  const [succeeded, setSucceeded] = React.useState(false)
   const [pending, startTransition] = React.useTransition()
 
   // The parent re-opens with the current name in hand; keep this input in sync
   // so a channel renamed elsewhere doesn't leave stale text behind.
   React.useEffect(() => setValue(name), [name])
 
+  // Closes after a successful save. This runs as an effect — after React has
+  // committed the re-render triggered by the action's revalidatePath() — so
+  // the close can't be lost in the race between the action resolving and the
+  // page refresh landing.
+  React.useEffect(() => {
+    if (!succeeded) return
+    dialogRef.current?.close()
+    setSucceeded(false)
+  }, [succeeded, dialogRef])
+
   function submit(formData: FormData) {
     startTransition(async () => {
       const result = await action(formData)
       setState(result)
-      // On success the row is already re-rendered behind the dialog
-      // (revalidatePath in the action) — close it, keeping it open on errors.
-      if (!result.error) dialogRef.current?.close()
+      if (result.error === undefined) setSucceeded(true)
     })
   }
 
