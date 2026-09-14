@@ -154,3 +154,142 @@ export async function getCustomers(): Promise<CustomerView[]> {
     }))
   )
 }
+
+/* ----------------------------------------------------------------- analytics */
+
+export type RevenuePoint = { period: string; revenue: number }
+
+export type RecentBooking = {
+  reference: string
+  fullName: string
+  channel: string
+  bid: string
+  createdAt: string
+}
+
+export type AnalyticsData = {
+  monthRevenue: number
+  monthBookings: number
+  monthLabel: string
+  accepted: number
+  declined: number
+  ratio: string
+  topChannel: string | null
+  topChannelCount: number
+  trend: RevenuePoint[]
+  recent: RecentBooking[]
+}
+
+/** "2026-09" — compared against the current month, bucketed in server-local time. */
+function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+}
+
+/** "Sep 26" — compact enough to fit under a chart column. */
+function monthLabel(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+}
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b)
+}
+
+/**
+ * Everything the /admin/analytics page shows, in one place. Revenue counts
+ * `confirmed` reservations only — a declined booking never paid — while the
+ * channel mix and recent bookings count every reservation regardless of
+ * status. All rolled up in JS: at studio scale the whole table is a few dozen
+ * rows, so one lean scan beats several grouped Prisma queries.
+ */
+export async function getAnalytics(): Promise<AnalyticsData> {
+  const rows = await prisma.studioReservation.findMany({
+    select: {
+      referenceNo: true,
+      status: true,
+      fullName: true,
+      channel: true,
+      bid: true,
+      createdAt: true,
+    },
+  })
+
+  const now = new Date()
+  const currentMonth = monthKey(now)
+
+  // Seed the trailing six months so quiet months render as zero, not gaps.
+  const trend = new Map<string, RevenuePoint>()
+  for (let i = 5; i >= 0; i--) {
+    const at = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    trend.set(monthKey(at), { period: monthLabel(at), revenue: 0 })
+  }
+
+  let accepted = 0
+  let declined = 0
+  let monthRevenue = 0
+  let monthBookings = 0
+  const channelCounts = new Map<string, number>()
+  const recent: RecentBooking[] = []
+
+  for (const row of rows) {
+    const amount = Number(row.bid)
+    switch (row.status) {
+      case "confirmed": {
+        accepted++
+        const bucket = trend.get(monthKey(row.createdAt))
+        if (bucket) {
+          bucket.revenue += amount
+          if (monthKey(row.createdAt) === currentMonth) {
+            monthRevenue += amount
+            monthBookings++
+          }
+        }
+        break
+      }
+      case "declined":
+        declined++
+        break
+    }
+    channelCounts.set(row.channel, (channelCounts.get(row.channel) ?? 0) + 1)
+    recent.push({
+      reference: formatReference(row.referenceNo),
+      fullName: row.fullName,
+      channel: row.channel,
+      bid: row.bid.toFixed(2),
+      createdAt: row.createdAt.toISOString(),
+    })
+  }
+
+  recent.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
+  // Reduced ratio — 1 rejection to every 4 accepts shows as "1 : 4".
+  let ratio = "—"
+  if (accepted > 0 || declined > 0) {
+    const step = gcd(declined, accepted)
+    ratio = `${declined / step} : ${accepted / step}`
+  }
+
+  let topChannel: string | null = null
+  let topChannelCount = 0
+  for (const [name, count] of channelCounts) {
+    if (count > topChannelCount) {
+      topChannel = name
+      topChannelCount = count
+    }
+  }
+
+  return {
+    monthRevenue,
+    monthBookings,
+    monthLabel: now.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    }),
+    accepted,
+    declined,
+    ratio,
+    topChannel,
+    topChannelCount,
+    trend: [...trend.values()],
+    recent: recent.slice(0, 3),
+  }
+}
