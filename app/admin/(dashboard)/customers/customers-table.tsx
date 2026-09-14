@@ -16,10 +16,21 @@ import {
   type CustomerView,
 } from "@/lib/reservation"
 
-const CUSTOMER_STATUS: Record<CustomerStatus, { label: string; variant: React.ComponentProps<typeof Badge>["variant"] }> = {
-  pending: { label: "Pending review", variant: "default" },
-  active: { label: "Active booking", variant: "secondary" },
-  inactive: { label: "Nothing current", variant: "outline" },
+// Color-coded: amber = needs review, green = has a live booking, gray = idle.
+// Tinted so the pill reads clearly in both light and dark mode.
+const CUSTOMER_STATUS: Record<CustomerStatus, { label: string; className: string }> = {
+  pending: {
+    label: "Pending review",
+    className: "border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  },
+  active: {
+    label: "Active booking",
+    className: "border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+  },
+  inactive: {
+    label: "Nothing current",
+    className: "border-transparent bg-secondary text-muted-foreground",
+  },
 }
 
 const STATUS_RANK: Record<CustomerStatus, number> = {
@@ -107,21 +118,23 @@ export function CustomersTable({ customers }: { customers: CustomerView[] }) {
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-[0.625rem] uppercase tracking-[0.18em] text-muted-foreground">
+          {/* Matches the card's section title (text-sm font-semibold) rather than
+              the tiny uppercase label used on the no-sort admin tables. */}
+          <tr className="border-b text-left text-sm font-semibold text-muted-foreground">
             {COLUMNS.map((column) => {
               const active = sort.key === column.key
               return (
                 <th
                   key={column.key}
                   scope="col"
-                  className={cn("px-5 py-3 font-semibold", column.align === "right" && "text-right")}
+                  className={cn(column.align === "right" && "text-right")}
                 >
                   <button
                     type="button"
                     onClick={() => toggle(column.key)}
                     aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
                     className={cn(
-                      "inline-flex items-center gap-1 transition-colors hover:text-foreground",
+                      "inline-flex items-center gap-1.5 px-5 py-3 transition-colors hover:text-foreground",
                       column.align === "right" && "flex-row-reverse",
                       active && "text-foreground"
                     )}
@@ -129,12 +142,12 @@ export function CustomersTable({ customers }: { customers: CustomerView[] }) {
                     {column.label}
                     {active ? (
                       sort.dir === "asc" ? (
-                        <ArrowUpIcon className="size-3.5" />
+                        <ArrowUpIcon className="size-4" />
                       ) : (
-                        <ArrowDownIcon className="size-3.5" />
+                        <ArrowDownIcon className="size-4" />
                       )
                     ) : (
-                      <ArrowUpDownIcon className="size-3.5 opacity-50" />
+                      <ArrowUpDownIcon className="size-4 opacity-50" />
                     )}
                   </button>
                 </th>
@@ -163,7 +176,9 @@ export function CustomersTable({ customers }: { customers: CustomerView[] }) {
                   {formatValue(customer.totalBid)}
                 </td>
                 <td className="px-5 py-4">
-                  <Badge variant={status.variant}>{status.label}</Badge>
+                  <Badge variant="outline" className={status.className}>
+                    {status.label}
+                  </Badge>
                 </td>
                 <td className="px-5 py-4 text-muted-foreground">
                   {formatLast(customer.lastReservedAt)}
