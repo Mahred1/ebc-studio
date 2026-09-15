@@ -5,6 +5,16 @@
 
 export const CURRENCY = { code: "ETB", symbol: "Br" } as const
 
+/** Time-period options for filtering the admin bookings list. */
+export const BOOKING_PERIODS = {
+  all: "All time",
+  today: "Today",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+} as const
+
+export type BookingPeriod = keyof typeof BOOKING_PERIODS
+
 /** Ethiopian country code. The form fixes it as a prefix; storage is +251 + 9 digits. */
 export const PHONE_PREFIX = "+251"
 /** Ethiopian national numbers are nine digits. */
@@ -295,6 +305,11 @@ export const RESERVATION_STATUSES = {
     label: "Declined",
     detail:
       "We couldn't accommodate this request. You're welcome to submit a new reservation.",
+  },
+  canceled: {
+    label: "Canceled",
+    detail:
+      "This reservation was canceled. You're welcome to submit a new reservation.",
   },
 } as const
 

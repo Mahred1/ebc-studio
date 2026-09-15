@@ -17,6 +17,7 @@ import {
   formatReference,
   normalizePhone,
   parseReference,
+  type BookingPeriod,
   type ReservationDraft,
   type ReservationStatus,
   type ReservationView,
@@ -364,6 +365,9 @@ export async function getOverview(): Promise<OverviewData> {
         declined++
         // A declined booking neither occupies a channel nor counts as active.
         continue
+      case "canceled":
+        // Same as declined: no longer an upcoming session, doesn't hold a channel.
+        continue
       case "confirmed":
         accepted++
         if (isToday) revenueToday += Number(row.bid)
@@ -393,5 +397,136 @@ export async function getOverview(): Promise<OverviewData> {
     accepted,
     declined,
     sessions,
+  }
+}
+
+/* ------------------------------------------------------------------ bookings */
+
+export const BOOKINGS_PER_PAGE = 5
+
+export type BookingRow = {
+  reference: string
+  status: ReservationStatus
+  fullName: string
+  channel: string
+  bid: string
+  createdAt: string
+}
+
+export type BookingsParams = {
+  status?: ReservationStatus
+  channel?: string
+  period?: BookingPeriod
+  page: number
+}
+
+export type BookingsData = {
+  rows: BookingRow[]
+  total: number
+  page: number
+  pages: number
+  counts: {
+    total: number
+    confirmed: number
+    pending: number
+    declined: number
+    canceled: number
+  }
+  /** Distinct channels used by reservations, name-sorted — the channel filter's options. */
+  channels: string[]
+  /** confirmed ÷ decided, as a rounded percent string, or null when nothing is decided. */
+  acceptanceRate: string | null
+}
+
+/** Where reservation filters point — the day a user picks "today" is local to the server. */
+function periodStart(period: BookingPeriod): Date | null {
+  const now = new Date()
+  switch (period) {
+    case "today":
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    case "7d":
+      return new Date(now.getTime() - 7 * 86_400_000)
+    case "30d":
+      return new Date(now.getTime() - 30 * 86_400_000)
+    case "all":
+      return null
+  }
+}
+
+/**
+ * The /admin/bookings page: status counts for the stat row, distinct channels
+ * for the channel filter, and one page of reservations matching the filters.
+ * Filters are applied in SQL (where), counts and pages are all reserved so a
+ * filter that matches nothing renders an empty table, not a broken page — at
+ * studio scale this is a handful of grouped queries, cheaper than loading rows.
+ */
+export async function getBookings(params: BookingsParams): Promise<BookingsData> {
+  const where: Prisma.StudioReservationWhereInput = {}
+  if (params.status) where.status = params.status
+  if (params.channel) where.channel = params.channel
+  const since = periodStart(params.period ?? "all")
+  if (since) where.createdAt = { gte: since }
+
+  // Total must land before the page can be clamped — an out-of-range ?page=
+  // would otherwise skip past everything and render an empty page.
+  const [byStatus, total, channels] = await Promise.all([
+    prisma.studioReservation.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
+    prisma.studioReservation.count({ where }),
+    prisma.studioReservation.groupBy({ by: ["channel"] }),
+  ])
+  const pages = Math.max(1, Math.ceil(total / BOOKINGS_PER_PAGE))
+  const page = Math.min(Math.max(params.page, 1), pages)
+
+  const rows = await prisma.studioReservation.findMany({
+    where,
+    select: {
+      referenceNo: true,
+      status: true,
+      fullName: true,
+      channel: true,
+      bid: true,
+      createdAt: true,
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    skip: (page - 1) * BOOKINGS_PER_PAGE,
+    take: BOOKINGS_PER_PAGE,
+  })
+
+  const counts = {
+    total: 0,
+    confirmed: 0,
+    pending: 0,
+    declined: 0,
+    canceled: 0,
+  }
+  for (const group of byStatus) {
+    counts[group.status] = group._count._all
+    counts.total += group._count._all
+  }
+
+  const decided = counts.confirmed + counts.declined + counts.canceled
+  const acceptanceRate =
+    decided === 0
+      ? null
+      : `${Math.round((counts.confirmed / decided) * 100)}%`
+
+  return {
+    rows: rows.map((row) => ({
+      reference: formatReference(row.referenceNo),
+      status: row.status,
+      fullName: row.fullName,
+      channel: row.channel,
+      bid: row.bid.toFixed(2),
+      createdAt: row.createdAt.toISOString(),
+    })),
+    total,
+    page,
+    pages,
+    counts,
+    channels: channels.map((c) => c.channel).sort(),
+    acceptanceRate,
   }
 }

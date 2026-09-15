@@ -21,6 +21,7 @@ enum ReservationStatus {
   pending
   confirmed
   declined
+  canceled
 }
 
 model StudioReservation {

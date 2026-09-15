@@ -52,6 +52,7 @@ const STATUS_BADGE = {
   pending: "secondary",
   confirmed: "default",
   declined: "destructive",
+  canceled: "outline",
 } as const
 
 export default async function AdminDashboardPage() {

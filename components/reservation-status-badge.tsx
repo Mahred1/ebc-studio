@@ -8,6 +8,7 @@ const STATUS_VARIANT: Record<
   pending: "secondary",
   confirmed: "default",
   declined: "destructive",
+  canceled: "outline",
 }
 
 export function ReservationStatusBadge({ status }: { status: ReservationStatus }) {
