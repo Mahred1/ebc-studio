@@ -60,20 +60,26 @@ export default async function Home() {
         <dl className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
           {[
             {
+              symbol: "✉",
               title: "Great Customer Service",
               desc: "A dedicated team is on hand before, during, and after your session — from booking to broadcast.",
             },
             {
+              symbol: "▣",
               title: "Professional Studios",
               desc: "Purpose-built recording spaces with broadcast-grade acoustics, controlled lighting, and room to work.",
             },
             {
+              symbol: "⚙",
               title: "High-Quality Equipment",
               desc: "Broadcast cameras, professional audio, and reliable recording gear operated by skilled crews.",
             },
           ].map((item) => (
             <div key={item.title} className="flex flex-col text-center">
-              <h3 className="font-serif text-xl font-bold">{item.title}</h3>
+              <span className="text-3xl leading-none" aria-hidden="true">
+                {item.symbol}
+              </span>
+              <h3 className="mt-3 font-serif text-xl font-bold">{item.title}</h3>
               <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {item.desc}
               </dd>
@@ -95,25 +101,34 @@ export default async function Home() {
           {[
             {
               num: "01",
+              symbol: "▶",
               title: "Choose a channel",
               desc: "Pick from the list of available television channels currently accepting reservations.",
             },
             {
               num: "02",
+              symbol: "✎",
               title: "Enter your details",
               desc: "Provide your name, email, and phone number so we can confirm your booking.",
             },
             {
               num: "03",
+              symbol: "✓",
               title: "Get confirmed",
               desc: "Receive a reservation ID instantly. Use it anytime to check your booking status.",
             },
           ].map((step) => (
             <li key={step.num} className="flex flex-col text-center">
-              <span className="font-mono text-sm font-semibold text-primary">
+              <span
+                className="text-3xl leading-none text-primary"
+                aria-hidden="true"
+              >
+                {step.symbol}
+              </span>
+              <span className="mt-3 font-mono text-sm font-semibold text-primary">
                 {step.num}
               </span>
-              <h3 className="mt-2 font-serif text-xl font-bold">{step.title}</h3>
+              <h3 className="mt-1 font-serif text-xl font-bold">{step.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {step.desc}
               </p>
