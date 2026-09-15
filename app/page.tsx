@@ -123,10 +123,13 @@ export default async function Home() {
             },
           ].map((item) => (
             <div key={item.title} className="flex flex-col text-center">
-              <span className="text-3xl leading-none" aria-hidden="true">
+              <span
+                className="mx-auto flex size-14 items-center justify-center rounded-xl border border-border bg-muted/50 text-2xl text-primary"
+                aria-hidden="true"
+              >
                 {item.symbol}
               </span>
-              <h3 className="mt-3 font-serif text-xl font-bold">{item.title}</h3>
+              <h3 className="mt-4 font-serif text-xl font-bold">{item.title}</h3>
               <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {item.desc}
               </dd>
@@ -167,15 +170,12 @@ export default async function Home() {
           ].map((step) => (
             <li key={step.num} className="flex flex-col text-center">
               <span
-                className="text-3xl leading-none text-primary"
+                className="mx-auto flex size-14 items-center justify-center rounded-xl border border-border bg-muted/50 text-2xl text-primary"
                 aria-hidden="true"
               >
                 {step.symbol}
               </span>
-              <span className="mt-3 font-mono text-sm font-semibold text-primary">
-                {step.num}
-              </span>
-              <h3 className="mt-1 font-serif text-xl font-bold">{step.title}</h3>
+              <h3 className="mt-4 font-serif text-xl font-bold">{step.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {step.desc}
               </p>
