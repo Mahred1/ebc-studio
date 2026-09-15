@@ -195,19 +195,47 @@ export default async function Home() {
               Available Channels
             </h2>
             <p className="mx-auto mt-4 max-w-md text-center text-muted-foreground">
-              These channels are currently open for studio reservations.
+              These channels are currently open for studio reservations. Choose
+              the one you&apos;re producing for.
             </p>
 
-            <div className="mt-10 flex flex-wrap justify-center gap-3">
-              {channels.map((ch) => (
-                <span
-                  key={ch.value}
-                  className="rounded-full border border-border px-5 py-2 text-sm font-medium"
-                >
-                  {ch.label}
-                </span>
-              ))}
+            <div className="mt-12 overflow-hidden rounded-xl border border-border">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-5 py-3 font-semibold text-muted-foreground">
+                      Channel
+                    </th>
+                    <th className="px-5 py-3 text-right font-semibold text-muted-foreground">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {channels.map((ch, i) => (
+                    <tr
+                      key={ch.value}
+                      className={i % 2 === 1 ? "bg-muted/30" : undefined}
+                    >
+                      <td className="px-5 py-3.5 font-medium">{ch.label}</td>
+                      <td className="px-5 py-3.5 text-right">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span
+                            className="size-2 rounded-full bg-success"
+                            aria-hidden="true"
+                          />
+                          <span className="text-success">Open</span>
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Channel availability changes daily. Check back before you book.
+            </p>
           </section>
 
           {/* ─── Divider ─── */}
