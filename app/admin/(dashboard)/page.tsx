@@ -50,7 +50,7 @@ function StatCard({
 
 const STATUS_BADGE = {
   pending: "secondary",
-  confirmed: "default",
+  confirmed: "success",
   declined: "destructive",
   canceled: "outline",
 } as const

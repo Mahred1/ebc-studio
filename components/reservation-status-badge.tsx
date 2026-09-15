@@ -6,7 +6,7 @@ const STATUS_VARIANT: Record<
   React.ComponentProps<typeof Badge>["variant"]
 > = {
   pending: "secondary",
-  confirmed: "default",
+  confirmed: "success",
   declined: "destructive",
   canceled: "outline",
 }

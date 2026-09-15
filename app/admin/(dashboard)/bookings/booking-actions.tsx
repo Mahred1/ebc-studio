@@ -28,7 +28,12 @@ export function BookingActions({
   if (status === "pending") {
     return (
       <div className="flex items-center justify-end gap-2">
-        <Button size="sm" disabled={pending} onClick={run(acceptBooking)}>
+        <Button
+          size="sm"
+          variant="success"
+          disabled={pending}
+          onClick={run(acceptBooking)}
+        >
           Accept
         </Button>
         <Button
