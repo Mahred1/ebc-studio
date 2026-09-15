@@ -14,6 +14,8 @@ import {
 } from "@/lib/reservation"
 import { getBookings } from "@/lib/reservations"
 import {
+  ChevronLeft,
+  ChevronRight,
   CircleCheck,
   CircleX,
   Clock,
@@ -215,6 +217,7 @@ export default async function AdminBookingsPage({
                 variant="outline"
                 render={<Link href={bookingsHref({ page: data.page - 1 }, state)} />}
               >
+                <ChevronLeft />
                 Previous
               </Button>
             ) : null}
@@ -225,6 +228,7 @@ export default async function AdminBookingsPage({
                 render={<Link href={bookingsHref({ page: data.page + 1 }, state)} />}
               >
                 Next
+                <ChevronRight />
               </Button>
             ) : null}
           </div>

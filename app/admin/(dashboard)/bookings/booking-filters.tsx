@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { cn } from "cn"
 
+
 import {
   Select,
   SelectContent,
@@ -74,8 +75,8 @@ export function BookingFilters({
                 "h-8 rounded-lg px-3 text-sm font-medium transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 active
-                  ? "bg-secondary font-semibold text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                  ? "font-semibold text-foreground underline underline-offset-4"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {option.label}
@@ -86,14 +87,16 @@ export function BookingFilters({
 
       <div className="flex flex-wrap items-center gap-2">
         <Select
-          value={channel}
-          onValueChange={(value) => go({ channel: value as string })}
+          value={channel === "" ? "all" : channel}
+          onValueChange={(value) =>
+            go({ channel: value === "all" ? "" : (value as string) })
+          }
         >
           <SelectTrigger size="sm" aria-label="Filter by channel">
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">
-            <SelectItem value="">All channels</SelectItem>
+            <SelectItem value="all">All channels</SelectItem>
             {channels.map((name) => (
               <SelectItem key={name} value={name}>
                 {name}
