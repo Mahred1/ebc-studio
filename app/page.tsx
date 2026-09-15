@@ -9,8 +9,55 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col bg-background font-sans text-foreground">
+      {/* ─── Nav ─── */}
+      <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <nav className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-6">
+          <Link href="#" className="flex items-center gap-2">
+            <Image
+              src="/ebc-logo.png"
+              alt=""
+              width={28}
+              height={28}
+              className="rounded-full"
+            />
+            <span className="font-serif text-sm font-bold">EBC Studio</span>
+          </Link>
+
+          <div className="hidden items-center gap-6 text-sm sm:flex">
+            <Link
+              href="#why"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Why EBC
+            </Link>
+            <Link
+              href="#how"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              How It Works
+            </Link>
+            {channels.length > 0 && (
+              <Link
+                href="#channels"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Channels
+              </Link>
+            )}
+            <Button render={<Link href="/reserve" />}>Reserve</Button>
+          </div>
+
+          <Button
+            render={<Link href="/reserve" />}
+            className="sm:hidden"
+          >
+            Reserve
+          </Button>
+        </nav>
+      </header>
+
       {/* ─── Hero ─── */}
-      <section className="flex flex-col items-center justify-center px-6 pt-20 pb-24 text-center sm:pt-28 sm:pb-32">
+      <section id="top" className="flex flex-col items-center justify-center px-6 pt-20 pb-24 text-center sm:pt-28 sm:pb-32">
         <Image
           src="/ebc-logo.png"
           alt="Ethiopian Broadcasting Corporation logo"
@@ -49,7 +96,7 @@ export default async function Home() {
       <div className="mx-auto w-full max-w-5xl border-t border-border" />
 
       {/* ─── Why EBC Studio ─── */}
-      <section className="mx-auto w-full max-w-5xl px-6 py-20 sm:py-24">
+      <section id="why" className="mx-auto w-full max-w-5xl scroll-mt-16 px-6 py-20 sm:py-24">
         <h2 className="text-center font-serif text-3xl font-bold sm:text-4xl">
           Why EBC Studio
         </h2>
@@ -92,7 +139,7 @@ export default async function Home() {
       <div className="mx-auto w-full max-w-5xl border-t border-border" />
 
       {/* ─── How it works ─── */}
-      <section className="mx-auto w-full max-w-5xl px-6 py-20 sm:py-24">
+      <section id="how" className="mx-auto w-full max-w-5xl scroll-mt-16 px-6 py-20 sm:py-24">
         <h2 className="text-center font-serif text-3xl font-bold sm:text-4xl">
           How It Works
         </h2>
@@ -143,7 +190,7 @@ export default async function Home() {
       {/* ─── Channels ─── */}
       {channels.length > 0 && (
         <>
-          <section className="mx-auto w-full max-w-5xl px-6 py-20 sm:py-24">
+          <section id="channels" className="mx-auto w-full max-w-5xl scroll-mt-16 px-6 py-20 sm:py-24">
             <h2 className="text-center font-serif text-3xl font-bold sm:text-4xl">
               Available Channels
             </h2>
