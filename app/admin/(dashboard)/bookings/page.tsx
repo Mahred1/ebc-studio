@@ -4,6 +4,7 @@ import { cn } from "cn"
 
 import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import { formatReservationDate } from "@/components/reservation-details"
+import { StatCard } from "@/components/stat-card"
 import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth"
 import {
@@ -55,24 +56,6 @@ function bookingsHref(
   if (next.page > 1) params.set("page", String(next.page))
   const qs = params.toString()
   return `/admin/bookings${qs ? `?${qs}` : ""}`
-}
-
-function StatCard({
-  label,
-  value,
-  detail,
-}: {
-  label: string
-  value: string
-  detail: string
-}) {
-  return (
-    <section className="rounded-xl border bg-card px-5 py-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-2xl font-black">{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
-    </section>
-  )
 }
 
 export default async function AdminBookingsPage({

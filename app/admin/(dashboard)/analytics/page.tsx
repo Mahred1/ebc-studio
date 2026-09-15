@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { StatCard } from "@/components/stat-card"
 import { requireAdmin } from "@/lib/auth"
 import { CURRENCY } from "@/lib/reservation"
 import { getAnalytics } from "@/lib/reservations"
@@ -28,24 +29,6 @@ function formatDate(iso: string): string {
     month: "short",
     day: "numeric",
   })
-}
-
-function StatCard({
-  label,
-  value,
-  detail,
-}: {
-  label: string
-  value: string
-  detail: string
-}) {
-  return (
-    <section className="rounded-xl border bg-card px-5 py-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-2xl font-black">{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
-    </section>
-  )
 }
 
 export default async function AdminAnalyticsPage() {
