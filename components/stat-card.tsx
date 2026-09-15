@@ -20,7 +20,7 @@ export function StatCard({
   label: string
   value: string
   detail: string
-  tone?: "neutral" | "success" | "danger"
+  tone?: "neutral" | "success" | "warning" | "danger"
 }) {
   return (
     <section className="rounded-xl border bg-card px-5 py-4">
@@ -33,6 +33,7 @@ export function StatCard({
             "flex size-8 shrink-0 items-center justify-center rounded-lg",
             tone === "neutral" && "bg-muted text-muted-foreground",
             tone === "success" && "bg-success/10 text-success",
+            tone === "warning" && "bg-amber-500/15 text-amber-700 dark:text-amber-400",
             tone === "danger" && "bg-destructive/10 text-destructive"
           )}
         >

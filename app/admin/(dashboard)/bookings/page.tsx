@@ -118,6 +118,7 @@ export default async function AdminBookingsPage({
         />
         <StatCard
           icon={Clock}
+          tone="warning"
           label="Pending"
           value={String(counts.pending)}
           detail="Awaiting a decision"

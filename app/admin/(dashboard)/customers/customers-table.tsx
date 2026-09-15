@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { cn } from "cn"
 
+import { PENDING_BADGE_CLASS } from "@/components/reservation-status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,11 +21,12 @@ import {
 } from "@/lib/reservation"
 
 // Color-coded: amber = needs review, green = has a live booking, gray = idle.
-// Tinted so the pill reads clearly in both light and dark mode.
+// Pending shares the reservation badge's amber so "needs review" reads the
+// same across the whole admin.
 const CUSTOMER_STATUS: Record<CustomerStatus, { label: string; className: string }> = {
   pending: {
     label: "Pending review",
-    className: "border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400",
+    className: PENDING_BADGE_CLASS,
   },
   active: {
     label: "Active booking",

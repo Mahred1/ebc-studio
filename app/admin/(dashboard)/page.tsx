@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { PENDING_BADGE_CLASS } from "@/components/reservation-status-badge"
 import { StatCard } from "@/components/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { requireAdmin } from "@/lib/auth"
@@ -87,6 +88,7 @@ export default async function AdminDashboardPage() {
         />
         <StatCard
           icon={Clock}
+          tone="warning"
           label="Pending review"
           value={String(overview.pending)}
           detail="Awaiting a decision"
@@ -140,7 +142,12 @@ export default async function AdminDashboardPage() {
                 </td>
                 <td className="px-5 py-4">{session.fullName}</td>
                 <td className="px-5 py-4">
-                  <Badge variant={STATUS_BADGE[session.status]}>
+                  <Badge
+                    variant={STATUS_BADGE[session.status]}
+                    className={
+                      session.status === "pending" ? PENDING_BADGE_CLASS : undefined
+                    }
+                  >
                     {session.status === "confirmed" ? "Confirmed" : "Pending"}
                   </Badge>
                 </td>
