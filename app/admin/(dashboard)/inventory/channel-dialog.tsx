@@ -72,7 +72,7 @@ function ChannelFormDialog({
     >
       <form action={submit} className="flex flex-col gap-6 p-6">
         <header className="flex flex-col gap-1.5">
-          <h2 className="text-lg font-black">{title}</h2>
+          <h2 className="text-lg font-bold">{title}</h2>
           <p className="text-sm text-muted-foreground">{description}</p>
         </header>
 

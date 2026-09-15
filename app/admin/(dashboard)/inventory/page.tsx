@@ -29,7 +29,7 @@ export default async function AdminInventoryPage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-black text-primary">Inventory</h1>
+          <h1 className="text-2xl font-bold text-primary">Inventory</h1>
           <p className="text-muted-foreground">
             The channels the reserve form offers. Hide a channel to drop it
             from the form without losing its past reservations.

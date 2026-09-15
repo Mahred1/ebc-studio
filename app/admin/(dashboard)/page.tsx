@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black text-primary">Overview</h1>
+        <h1 className="text-2xl font-bold text-primary">Overview</h1>
         <p className="text-muted-foreground">
           Signed in as {admin.username} — at a glance, right now.
         </p>

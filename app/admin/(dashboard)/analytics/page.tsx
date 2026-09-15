@@ -46,7 +46,7 @@ export default async function AdminAnalyticsPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black text-primary">Analytics</h1>
+        <h1 className="text-2xl font-bold text-primary">Analytics</h1>
         <p className="text-muted-foreground">
           Live numbers from reservations — revenue counts confirmed bookings only.
         </p>

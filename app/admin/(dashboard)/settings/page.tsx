@@ -30,7 +30,7 @@ export default async function AdminSettingsPage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-black text-primary">Settings</h1>
+          <h1 className="text-2xl font-bold text-primary">Settings</h1>
           <p className="text-muted-foreground">
             Who can sign in to the management suite.
           </p>

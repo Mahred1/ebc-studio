@@ -24,10 +24,10 @@ export default async function AdminLoginPage({
     <main className="flex min-h-dvh w-full justify-center px-4 py-10 sm:py-16">
       <div className="flex w-full max-w-sm flex-col gap-8">
         <header className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-3xl font-black text-primary sm:text-4xl">
+          <h1 className="text-3xl font-bold text-primary sm:text-4xl">
             Admin Sign In
           </h1>
-          <p className="text-lg font-light text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Staff access to EBC Studio reservations.
           </p>
         </header>

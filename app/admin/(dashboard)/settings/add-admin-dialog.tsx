@@ -132,7 +132,7 @@ export function AddAdminDialog() {
         {created ? (
           <div className="flex flex-col gap-6 p-6">
             <header className="flex flex-col gap-1.5">
-              <h2 className="text-lg font-black">Admin created</h2>
+              <h2 className="text-lg font-bold">Admin created</h2>
               <p className="text-sm text-muted-foreground">
                 Hand these over now. The password is stored hashed, so this is
                 the last time it can be read.
@@ -158,7 +158,7 @@ export function AddAdminDialog() {
         ) : (
           <form action={submit} className="flex flex-col gap-6 p-6">
             <header className="flex flex-col gap-1.5">
-              <h2 className="text-lg font-black">Add an admin</h2>
+              <h2 className="text-lg font-bold">Add an admin</h2>
               <p className="text-sm text-muted-foreground">
                 Pick their credentials, or generate a pair to read out.
               </p>

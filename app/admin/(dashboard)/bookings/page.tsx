@@ -96,7 +96,7 @@ export default async function AdminBookingsPage({
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black text-primary">Bookings</h1>
+        <h1 className="text-2xl font-bold text-primary">Bookings</h1>
         <p className="text-muted-foreground">
           Review, accept, reject — and cancel a confirmed booking.
         </p>

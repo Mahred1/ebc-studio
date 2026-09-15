@@ -49,7 +49,7 @@ export function DeleteChannelButton({
           <input type="hidden" name="id" value={id} />
           <div className="flex flex-col gap-6 p-6">
             <header className="flex flex-col gap-1.5">
-              <h2 className="text-lg font-black">Delete channel</h2>
+              <h2 className="text-lg font-bold">Delete channel</h2>
               <p className="text-sm text-muted-foreground">
                 Delete <span className="font-medium text-foreground">{name}</span>?
                 It&apos;ll leave the reserve form and the inventory for good. Hide it

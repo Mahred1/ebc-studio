@@ -18,7 +18,7 @@ export default async function AdminCustomersPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black text-primary">Customers</h1>
+        <h1 className="text-2xl font-bold text-primary">Customers</h1>
         <p className="text-muted-foreground">
           Everyone who&apos;s booked. Aggregated live from reservations —{" "}
           click any column header to sort.
