@@ -5,10 +5,13 @@ import {
   ArrowDownIcon,
   ArrowUpDownIcon,
   ArrowUpIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { cn } from "cn"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   CURRENCY,
   formatPhone,
@@ -88,8 +91,12 @@ function formatLast(iso: string): string {
   })
 }
 
+/** Rows per page, matching the bookings list. */
+const PER_PAGE = 5
+
 export function CustomersTable({ customers }: { customers: CustomerView[] }) {
   const [sort, setSort] = React.useState<Sort>({ key: "value", dir: "desc" })
+  const [page, setPage] = React.useState(1)
 
   const sorted = React.useMemo(() => {
     const rows = [...customers].sort((a, b) => {
@@ -99,12 +106,18 @@ export function CustomersTable({ customers }: { customers: CustomerView[] }) {
     return rows
   }, [customers, sort])
 
+  const pages = Math.max(1, Math.ceil(sorted.length / PER_PAGE))
+  const current = Math.min(page, pages)
+  const pageRows = sorted.slice((current - 1) * PER_PAGE, current * PER_PAGE)
+
   function toggle(key: SortKey) {
     setSort((prev) =>
       prev.key === key
         ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
         : { key, dir: "asc" }
     )
+    // A re-sorted list starts a new first page.
+    setPage(1)
   }
 
   return (
@@ -156,7 +169,7 @@ export function CustomersTable({ customers }: { customers: CustomerView[] }) {
           </tr>
         </thead>
         <tbody>
-          {sorted.map((customer) => {
+          {pageRows.map((customer) => {
             const status = CUSTOMER_STATUS[customer.status]
             return (
               <tr key={customer.email} className="border-b last:border-0">
@@ -193,6 +206,37 @@ export function CustomersTable({ customers }: { customers: CustomerView[] }) {
         <p className="px-5 py-4 text-sm text-muted-foreground">
           No reservations yet — customers appear here as soon as someone books.
         </p>
+      ) : null}
+
+      {sorted.length > 0 ? (
+        <nav className="flex items-center justify-between gap-2 border-t px-5 py-3 text-sm">
+          <p className="text-muted-foreground">
+            Page {current} of {pages} · {sorted.length}{" "}
+            {sorted.length === 1 ? "customer" : "customers"}
+          </p>
+          <div className="flex items-center gap-2">
+            {current > 1 ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setPage(current - 1)}
+              >
+                <ChevronLeft />
+                Previous
+              </Button>
+            ) : null}
+            {current < pages ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setPage(current + 1)}
+              >
+                Next
+                <ChevronRight />
+              </Button>
+            ) : null}
+          </div>
+        </nav>
       ) : null}
     </section>
   )
