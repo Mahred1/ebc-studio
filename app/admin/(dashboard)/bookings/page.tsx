@@ -13,6 +13,13 @@ import {
   type ReservationStatus,
 } from "@/lib/reservation"
 import { getBookings } from "@/lib/reservations"
+import {
+  CircleCheck,
+  CircleX,
+  Clock,
+  ListChecks,
+  Percent,
+} from "lucide-react"
 import { BookingActions } from "./booking-actions"
 import { BookingFilters } from "./booking-filters"
 
@@ -94,15 +101,34 @@ export default async function AdminBookingsPage({
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Total" value={String(counts.total)} detail="All reservations" />
-        <StatCard label="Confirmed" value={String(counts.confirmed)} detail="Accepted bookings" />
-        <StatCard label="Pending" value={String(counts.pending)} detail="Awaiting a decision" />
         <StatCard
+          icon={ListChecks}
+          label="Total"
+          value={String(counts.total)}
+          detail="All reservations"
+        />
+        <StatCard
+          icon={CircleCheck}
+          tone="success"
+          label="Confirmed"
+          value={String(counts.confirmed)}
+          detail="Accepted bookings"
+        />
+        <StatCard
+          icon={Clock}
+          label="Pending"
+          value={String(counts.pending)}
+          detail="Awaiting a decision"
+        />
+        <StatCard
+          icon={CircleX}
+          tone="danger"
           label="Canceled / rejected"
           value={String(canceledRejected)}
           detail={`${counts.declined} rejected · ${counts.canceled} canceled`}
         />
         <StatCard
+          icon={Percent}
           label="Acceptance rate"
           value={data.acceptanceRate ?? "—"}
           detail={

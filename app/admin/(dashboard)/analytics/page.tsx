@@ -4,6 +4,7 @@ import { StatCard } from "@/components/stat-card"
 import { requireAdmin } from "@/lib/auth"
 import { CURRENCY } from "@/lib/reservation"
 import { getAnalytics } from "@/lib/reservations"
+import { CircleDollarSign, Gauge, TrendingUp } from "lucide-react"
 import { RevenueChart } from "./revenue-chart"
 
 export const metadata: Metadata = {
@@ -53,16 +54,19 @@ export default async function AdminAnalyticsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
+          icon={CircleDollarSign}
           label="Estimated monthly revenue"
           value={money(stats.monthRevenue)}
           detail={`${stats.monthLabel} · ${stats.monthBookings} confirmed`}
         />
         <StatCard
+          icon={Gauge}
           label="Reject-to-accept ratio"
           value={stats.ratio}
           detail={`${stats.declined} rejected · ${stats.accepted} accepted`}
         />
         <StatCard
+          icon={TrendingUp}
           label="Most booked channel"
           value={stats.topChannel ?? "—"}
           detail={channelDetail}

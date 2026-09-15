@@ -5,6 +5,14 @@ import { Badge } from "@/components/ui/badge"
 import { requireAdmin } from "@/lib/auth"
 import { CURRENCY } from "@/lib/reservation"
 import { getOverview } from "@/lib/reservations"
+import {
+  CalendarDays,
+  CircleCheck,
+  CircleDollarSign,
+  CircleX,
+  Clock,
+  Radio,
+} from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Admin | EBC Studio",
@@ -60,31 +68,39 @@ export default async function AdminDashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
+          icon={Radio}
           label="Channel occupancy"
           value={`${overview.occupiedChannels} / ${overview.totalChannels}`}
           detail={`${occupancyPct} of channels booked`}
         />
         <StatCard
+          icon={CircleDollarSign}
           label="Revenue today"
           value={money(overview.revenueToday)}
           detail="Confirmed bookings"
         />
         <StatCard
+          icon={CalendarDays}
           label="Bookings today"
           value={String(overview.bookingsToday)}
           detail="Open + confirmed"
         />
         <StatCard
+          icon={Clock}
           label="Pending review"
           value={String(overview.pending)}
           detail="Awaiting a decision"
         />
         <StatCard
+          icon={CircleCheck}
+          tone="success"
           label="Accepted"
           value={String(overview.accepted)}
           detail={`${overview.declined} declined`}
         />
         <StatCard
+          icon={CircleX}
+          tone="danger"
           label="Rejected"
           value={String(overview.declined)}
           detail="Declined bookings"
