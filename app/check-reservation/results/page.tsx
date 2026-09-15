@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 
 import { ReservationResults, ReservationResultsFallback } from "./reservation-results"
@@ -22,11 +23,18 @@ export default async function ReservationResultsPage({
     <main className="flex min-h-dvh w-full justify-center px-4 py-10 sm:py-16">
       <div className="flex w-full max-w-lg flex-col gap-8">
         <header className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-3xl font-black text-primary sm:text-4xl">
+          <Image
+            src="/ebc-logo.png"
+            alt="Ethiopian Broadcasting Corporation logo"
+            width={64}
+            height={64}
+            className="rounded-full"
+          />
+          <h1 className="mt-3 font-serif text-3xl font-bold sm:text-4xl">
             Your Reservations
           </h1>
           {email ? (
-            <p className="text-lg font-light text-muted-foreground">
+            <p className="text-lg text-muted-foreground">
               Booked with <span className="text-foreground">{email}</span>
             </p>
           ) : null}
