@@ -18,6 +18,7 @@ import {
   normalizePhone,
   parseReference,
   type ReservationDraft,
+  type ReservationStatus,
   type ReservationView,
 } from "@/lib/reservation"
 import type { CustomerView } from "@/lib/reservation"
@@ -291,5 +292,106 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     topChannelCount,
     trend: [...trend.values()],
     recent: recent.slice(0, 3),
+  }
+}
+
+/* ------------------------------------------------------------------ overview */
+
+export type OverviewSession = {
+  reference: string
+  channel: string
+  fullName: string
+  /** created ISO — reservations have no scheduled slot, so this stands in for the date. */
+  bookedAt: string
+  status: ReservationStatus
+}
+
+export type OverviewData = {
+  occupiedChannels: number
+  totalChannels: number
+  revenueToday: number
+  bookingsToday: number
+  pending: number
+  accepted: number
+  declined: number
+  sessions: OverviewSession[]
+}
+
+/** "2026-09-15" — a reservation "today" is bucketed in server-local time. */
+function dayKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(date.getDate()).padStart(2, "0")}`
+}
+
+/**
+ * Everything the /admin Overview page shows in one scan: today's revenue (confirmed
+ * only) and active bookings, lifetime status counts, channel occupancy (distinct
+ * channels with an open or confirmed reservation), and the upcoming list — pending
+ * and confirmed reservations newest-first, declined dropped.
+ */
+export async function getOverview(): Promise<OverviewData> {
+  const [rows, totalChannels] = await Promise.all([
+    prisma.studioReservation.findMany({
+      select: {
+        referenceNo: true,
+        status: true,
+        channel: true,
+        fullName: true,
+        bid: true,
+        createdAt: true,
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    }),
+    prisma.channelInventory.count({ where: { hidden: false } }),
+  ])
+
+  const today = dayKey(new Date())
+  let revenueToday = 0
+  let bookingsToday = 0
+  let pending = 0
+  let accepted = 0
+  let declined = 0
+  const occupied = new Set<string>()
+  const sessions: OverviewSession[] = []
+
+  for (const row of rows) {
+    const isToday = dayKey(row.createdAt) === today
+
+    switch (row.status) {
+      case "declined":
+        declined++
+        // A declined booking neither occupies a channel nor counts as active.
+        continue
+      case "confirmed":
+        accepted++
+        if (isToday) revenueToday += Number(row.bid)
+        break
+      case "pending":
+        pending++
+        break
+    }
+
+    if (isToday) bookingsToday++
+    occupied.add(row.channel)
+    sessions.push({
+      reference: formatReference(row.referenceNo),
+      channel: row.channel,
+      fullName: row.fullName,
+      bookedAt: row.createdAt.toISOString(),
+      status: row.status,
+    })
+  }
+
+  return {
+    occupiedChannels: occupied.size,
+    totalChannels,
+    revenueToday,
+    bookingsToday,
+    pending,
+    accepted,
+    declined,
+    sessions,
   }
 }
