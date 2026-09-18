@@ -1,26 +1,31 @@
-import type { Metadata } from "next"
-import Image from "next/image"
-import Link from "next/link"
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 
-import { CheckReservationForm } from "./check-reservation-form"
+import { CheckReservationForm } from "./check-reservation-form";
 
 export const metadata: Metadata = {
   title: "Check Reservation | EBC Studio",
-  description: "Check the status of your Ethiopian Television studio reservation.",
-}
+  description:
+    "Check the status of your Ethiopian Television studio reservation.",
+};
 
 export default function CheckReservationPage() {
   return (
     <main className="flex min-h-dvh w-full justify-center px-4 py-10 sm:py-16">
       <div className="flex w-full max-w-lg flex-col gap-8">
         <header className="flex flex-col items-center gap-2 text-center">
-          <Image
-            src="/ebc-logo.png"
-            alt="Ethiopian Broadcasting Corporation logo"
-            width={64}
-            height={64}
-            className="rounded-full"
-          />
+          <Link href="/">
+            {" "}
+            <Image
+              src="/ebc-logo.png"
+              alt="Ethiopian Broadcasting Corporation logo"
+              width={64}
+              height={64}
+              className="rounded-full"
+            />
+          </Link>
+
           <h1 className="mt-3 font-serif text-3xl font-bold sm:text-4xl">
             Check Your Reservation
           </h1>
@@ -42,5 +47,5 @@ export default function CheckReservationPage() {
         </p>
       </div>
     </main>
-  )
+  );
 }

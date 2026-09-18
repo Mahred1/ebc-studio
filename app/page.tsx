@@ -1,7 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
+import FaqAccordion from "./components/FaqAccordion"
 import { getVisibleChannelOptions } from "@/lib/channels"
 
 export default async function Home() {
@@ -9,259 +9,208 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col bg-background font-sans text-foreground">
-      {/* ─── Nav ─── */}
-      <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <nav className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-6">
-          <Link href="#" className="flex items-center gap-2">
-            <Image
-              src="/ebc-logo.png"
-              alt=""
-              width={28}
-              height={28}
-              className="rounded-full"
-            />
-            <span className="font-serif text-sm font-bold">EBC Studio</span>
+      {/* Nav */}
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95">
+        <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6 lg:px-10">
+          <Link href="#" className="flex items-center gap-3 group">
+            <div className="relative">
+              <Image
+                src="/ebc-logo.png"
+                alt=""
+                width={32}
+                height={32}
+                className="rounded-full shadow-md ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all"
+              />
+            </div>
+            <span className="font-serif text-lg font-bold tracking-tight leading-none">EBC Studio</span>
           </Link>
 
-          <div className="hidden items-center gap-6 text-sm sm:flex">
-            <Link
-              href="#why"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Why EBC
-            </Link>
-            <Link
-              href="#how"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              How It Works
-            </Link>
-            {channels.length > 0 && (
+          <div className="hidden items-center gap-8 text-[15px] font-medium sm:flex">
+            {[
+              { label: "Why EBC", href: "#why-ebc" },
+              { label: "How It Works", href: "#how-it-works" },
+              { label: "Channels", href: "#channels" },
+            ].map((item) => (
               <Link
-                href="#channels"
-                className="text-muted-foreground transition-colors hover:text-foreground"
+                key={item.label}
+                href={item.href}
+                className="text-stone-500 hover:text-foreground transition-colors relative after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-primary after:transition-all after:duration-300"
               >
-                Channels
+                {item.label}
               </Link>
-            )}
-            <Button render={<Link href="/reserve" />}>Reserve</Button>
+            ))}
+            <Button render={<Link href="/reserve" />} className="ml-2 rounded-full px-5 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">Reserve</Button>
           </div>
 
-          <Button
-            render={<Link href="/reserve" />}
-            className="sm:hidden"
-          >
-            Reserve
-          </Button>
+          <Button render={<Link href="/reserve" />} className="rounded-full sm:hidden shadow-lg shadow-primary/20">Reserve</Button>
         </nav>
       </header>
 
-      {/* ─── Hero ─── */}
-      <section id="top" className="flex flex-col items-center justify-center px-6 pt-20 pb-24 text-center sm:pt-28 sm:pb-32">
-        <Image
-          src="/ebc-logo.png"
-          alt="Ethiopian Broadcasting Corporation logo"
-          width={80}
-          height={80}
-          priority
-          className="mb-6 rounded-full"
-        />
+      {/* Hero — editorial light with logo background */}
+      <section id="top" className="relative overflow-hidden bg-stone-50 text-foreground">
+        <Image src="/ebc-logo.png" alt="" width={140} height={140} priority className="absolute top-[12%] left-[5%] -rotate-12 opacity-[0.12] pointer-events-none select-none" />
+        <Image src="/ebc-logo.png" alt="" width={90} height={90} priority className="absolute top-[18%] right-[8%] rotate-12 opacity-[0.10] pointer-events-none select-none" />
+        <Image src="/ebc-logo.png" alt="" width={160} height={160} priority className="absolute bottom-[8%] left-[10%] rotate-6 opacity-[0.14] pointer-events-none select-none" />
+        <Image src="/ebc-logo.png" alt="" width={70} height={70} priority className="absolute bottom-[12%] right-[12%] -rotate-6 opacity-[0.11] pointer-events-none select-none" />
+        <Image src="/ebc-logo.png" alt="" width={110} height={110} priority className="absolute top-[45%] left-[3%] rotate-45 opacity-[0.09] pointer-events-none select-none" />
+        <Image src="/ebc-logo.png" alt="" width={50} height={50} priority className="absolute top-[55%] right-[3%] -rotate-45 opacity-[0.08] pointer-events-none select-none" />
+        <Image src="/ebc-logo.png" alt="" width={130} height={130} priority className="absolute top-[22%] left-[50%] -rotate-6 opacity-[0.10] pointer-events-none select-none" />
+        <div className="relative mx-auto max-w-6xl px-6 lg:px-10 pt-24 pb-28 sm:pt-32 sm:pb-36 lg:pt-40 lg:pb-44 text-center">
+          <div className="mx-auto mb-8 inline-block rounded-full overflow-hidden ring-1 ring-primary/30 p-1">
+            <Image
+              src="/ebc-logo.png"
+              alt="EBC Studio"
+              width={120}
+              height={120}
+              priority
+              className="rounded-full"
+            />
+          </div>
 
-        <h1 className="font-serif text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-          Ethiopian Broadcasting
-          <br />
-          <span className="text-primary">Studio Reservations</span>
-        </h1>
+          <h1 className="font-serif text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-[4.5rem]">
+            <span className="block text-foreground">Broadcast.</span>
+            <span className="block text-primary">Record. Resonance.</span>
+          </h1>
 
-        <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
-          Book a recording session at EBC studios. Select your channel, pick a
-          time, and confirm — it takes less than a minute.
-        </p>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-stone-500">
+            Book a recording session at EBC studios in under a minute. Professional acoustics, broadcast-grade equipment, and a team that knows the craft.
+          </p>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button render={<Link href="/reserve" />} size="lg">
-            Reserve a Spot
-          </Button>
-          <Button
-            render={<Link href="/check-reservation" />}
-            variant="outline"
-            size="lg"
-          >
-            Check Reservation
-          </Button>
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row justify-center">
+            <Button render={<Link href="/reserve" />} size="lg" className="rounded-full px-8 py-6 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all bg-primary border-0 text-white font-semibold tracking-tight">
+              Reserve a Spot
+            </Button>
+            <Button
+              render={<Link href="/check-reservation" />}
+              variant="outline"
+              size="lg"
+              className="rounded-full px-8 py-6 text-lg border-border text-foreground hover:bg-muted hover:border-muted-foreground transition-all font-medium"
+            >
+              Check Reservation
+            </Button>
+          </div>
+
+          {/* Credibility bar removed */}
         </div>
       </section>
 
-      {/* ─── Divider ─── */}
-      <div className="mx-auto w-full max-w-5xl border-t border-border" />
+      {/* Divider */}
+      <div className="mx-auto w-full max-w-6xl border-t border-border" />
 
-      {/* ─── Why EBC Studio ─── */}
-      <section id="why" className="mx-auto w-full max-w-5xl scroll-mt-16 px-6 py-20 sm:py-24">
-        <h2 className="text-center font-serif text-3xl font-bold sm:text-4xl">
-          Why EBC Studio
-        </h2>
-        <p className="mx-auto mt-4 max-w-md text-center text-muted-foreground">
-          Everything you need for a flawless production, all in one place.
-        </p>
+      {/* Why EBC */}
+      <section id="why-ebc" className="mx-auto w-full max-w-6xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-stone-50">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <div className="lg:col-span-4 lg:sticky lg:top-28">
+            <h2 className="font-serif text-5xl sm:text-6xl font-bold leading-[1.1] tracking-tight">
+              Why <span className="text-primary">EBC</span>
+            </h2>
+            <p className="mt-6 text-lg text-stone-500 leading-relaxed">A producer-first space: everything from sound treatment to crew support, designed around what actually makes great content.</p>
+            <div className="mt-8 h-1 w-16 bg-primary rounded-full" />
+          </div>
 
-        <dl className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
-          {[
-            {
-              symbol: "✉",
-              title: "Great Customer Service",
-              desc: "A dedicated team is on hand before, during, and after your session — from booking to broadcast.",
-            },
-            {
-              symbol: "▣",
-              title: "Professional Studios",
-              desc: "Purpose-built recording spaces with broadcast-grade acoustics, controlled lighting, and room to work.",
-            },
-            {
-              symbol: "⚙",
-              title: "High-Quality Equipment",
-              desc: "Broadcast cameras, professional audio, and reliable recording gear operated by skilled crews.",
-            },
-          ].map((item) => (
-            <div key={item.title} className="flex flex-col text-center">
-              <span
-                className="mx-auto flex size-14 items-center justify-center rounded-xl border border-border bg-muted/50 text-2xl text-primary"
-                aria-hidden="true"
-              >
-                {item.symbol}
-              </span>
-              <h3 className="mt-4 font-serif text-xl font-bold">{item.title}</h3>
-              <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {item.desc}
-              </dd>
-            </div>
-          ))}
-        </dl>
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            {[
+              { num: "01", title: "Dedicated Crew", desc: "A team is on hand before, during, and after — from booking to broadcast. No empty rooms, no solo struggles.", align: "left" as const },
+              { num: "02", title: "Broadcast Studios", desc: "Purpose-built spaces with treated acoustics, controlled lighting, and room to work — built for the screen, not the showroom.", align: "right" as const },
+              { num: "03", title: "Pro Equipment", desc: "Broadcast cameras, professional audio, and reliable recording gear — maintained by people who use it every day.", align: "left" as const },
+            ].map((item) => (
+              <div key={item.title} className={`group relative rounded-2xl border border-border/50 bg-stone-100/70 p-8 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/[0.05] transition-all hover:-translate-y-1 ${item.align === "right" ? "lg:ml-auto lg:max-w-[85%]" : ""}`}>
+                <div className="absolute top-4 right-5 font-mono text-5xl font-bold text-stone-500/10 select-none group-hover:text-primary/10 transition-colors">{item.num}</div>
+                <h3 className="font-serif text-2xl font-bold tracking-tight">{item.title}</h3>
+                <dd className="mt-3 text-sm leading-relaxed text-stone-500">{item.desc}</dd>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* ─── Divider ─── */}
-      <div className="mx-auto w-full max-w-5xl border-t border-border" />
+      {/* Divider */}
+      <div className="mx-auto w-full max-w-6xl border-t border-border" />
 
-      {/* ─── How it works ─── */}
-      <section id="how" className="mx-auto w-full max-w-5xl scroll-mt-16 px-6 py-20 sm:py-24">
-        <h2 className="text-center font-serif text-3xl font-bold sm:text-4xl">
-          How It Works
-        </h2>
+      {/* How It Works — numbered timeline with connecting line */}
+      <section id="how-it-works" className="mx-auto w-full max-w-6xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-white">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="font-serif text-5xl font-bold tracking-tight">How It Works</h2>
+          <p className="mt-4 text-xl text-stone-500">Three steps. No bureaucracy. Just confirmation.</p>
+        </div>
 
-        <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
+        <ol className="relative grid gap-10 sm:grid-cols-3">
+          {/* Connecting line (desktop) */}
+          <div className="hidden sm:block absolute top-[2rem] left-[16.666%] right-[16.666%] h-px bg-primary/30" />
+
           {[
-            {
-              num: "01",
-              symbol: "▶",
-              title: "Choose a channel",
-              desc: "Pick from the list of available television channels currently accepting reservations.",
-            },
-            {
-              num: "02",
-              symbol: "✎",
-              title: "Enter your details",
-              desc: "Provide your name, email, and phone number so we can confirm your booking.",
-            },
-            {
-              num: "03",
-              symbol: "✓",
-              title: "Get confirmed",
-              desc: "Receive a reservation ID instantly. Use it anytime to check your booking status.",
-            },
+            { num: "01", title: "Choose a Channel", desc: "Browse available television channels open for reservations. Each listed with live status.", icon: "▶" },
+            { num: "02", title: "Enter Your Details", desc: "Name, email, and phone — just enough to confirm. No unnecessary forms.", icon: "✎" },
+            { num: "03", title: "Get Confirmed", desc: "An instant reservation ID. Check status anytime with it.", icon: "✓" },
           ].map((step) => (
-            <li key={step.num} className="flex flex-col text-center">
-              <span
-                className="mx-auto flex size-14 items-center justify-center rounded-xl border border-border bg-muted/50 text-2xl text-primary"
-                aria-hidden="true"
-              >
-                {step.symbol}
-              </span>
-              <h3 className="mt-4 font-serif text-xl font-bold">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {step.desc}
-              </p>
+            <li key={step.num} className="relative flex flex-col text-left sm:text-center">
+              <div className="mx-auto sm:mx-0 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white text-xl shadow-xl shadow-primary/25 ring-4 ring-background z-10 mb-6 font-serif font-bold">
+                {step.num}
+              </div>
+              <h3 className="font-serif text-2xl font-bold tracking-tight">{step.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-stone-500 max-w-xs mx-auto sm:mx-0">{step.desc}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      {/* ─── Divider ─── */}
-      <div className="mx-auto w-full max-w-5xl border-t border-border" />
+      {/* Divider */}
+      <div className="mx-auto w-full max-w-6xl border-t border-border" />
 
-      {/* ─── Channels ─── */}
+      {/* Channels — visual cards instead of table */}
       {channels.length > 0 && (
         <>
-          <section id="channels" className="mx-auto w-full max-w-5xl scroll-mt-16 px-6 py-20 sm:py-24">
-            <h2 className="text-center font-serif text-3xl font-bold sm:text-4xl">
-              Available Channels
-            </h2>
-            <p className="mx-auto mt-4 max-w-md text-center text-muted-foreground">
-              These channels are currently open for studio reservations. Choose
-              the one you&apos;re producing for.
-            </p>
-
-            <div className="mt-12 overflow-hidden rounded-xl border border-border">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="px-5 py-3 font-semibold text-muted-foreground">
-                      Channel
-                    </th>
-                    <th className="px-5 py-3 text-right font-semibold text-muted-foreground">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {channels.map((ch, i) => (
-                    <tr
-                      key={ch.value}
-                      className={i % 2 === 1 ? "bg-muted/30" : undefined}
-                    >
-                      <td className="px-5 py-3.5 font-medium">{ch.label}</td>
-                      <td className="px-5 py-3.5 text-right">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span
-                            className="size-2 rounded-full bg-success"
-                            aria-hidden="true"
-                          />
-                          <span className="text-success">Open</span>
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <section id="channels" className="mx-auto w-full max-w-6xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-stone-50">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
+              <div>
+                <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight">Available Channels</h2>
+                <p className="mt-3 text-stone-500 text-lg">Open for reservations today. Pick the one you are producing for.</p>
+              </div>
             </div>
 
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Channel availability changes daily. Check back before you book.
-            </p>
+            <div className="divide-y divide-border/60 border-t border-b border-border rounded-2xl overflow-hidden bg-stone-100/80">
+              {channels.map((ch, i) => (
+                <Link key={ch.value} href="/reserve" className="group flex items-center justify-between px-6 py-4 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono text-xs text-stone-500 w-6">{String(i + 1).padStart(2, "0")}</span>
+                    <h3 className="font-serif text-xl font-bold tracking-tight group-hover:text-primary transition-colors">{ch.label}</h3>
+                  </div>
+                  <span className="text-primary text-base font-bold opacity-100 group-hover:translate-x-1 transition-all" aria-hidden="true">→</span>
+                </Link>
+              ))}
+            </div>
           </section>
 
-          {/* ─── Divider ─── */}
-          <div className="mx-auto w-full max-w-5xl border-t border-border" />
+          <div className="mx-auto w-full max-w-6xl border-t border-stone-200/60" />
         </>
       )}
 
-      {/* ─── CTA ─── */}
-      <section className="mx-auto w-full max-w-5xl px-6 py-20 text-center sm:py-24">
-        <h2 className="font-serif text-3xl font-bold sm:text-4xl">
-          Ready to book?
-        </h2>
-        <p className="mx-auto mt-4 max-w-md text-muted-foreground">
-          Secure your studio session in just a few clicks.
-        </p>
-        <Button render={<Link href="/reserve" />} size="lg" className="mt-8">
-          Reserve a Spot
-        </Button>
+      {/* FAQ */}
+      <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-white">
+        <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-center">Frequently Asked</h2>
+        <p className="mt-3 text-center text-stone-500">Quick answers — if you need more, reserve and ask directly.</p>
+
+        <FaqAccordion />
       </section>
 
-      {/* ─── Footer ─── */}
-      <footer className="border-t border-border px-6 py-8 text-center text-sm text-muted-foreground">
-        <p>
-          &copy; {new Date().getFullYear()} Ethiopian Broadcasting Corporation.
-          All rights reserved.
-        </p>
+      {/* CTA — editorial closing */}
+      <section className="mx-auto w-full max-w-6xl px-6 lg:px-10 py-28 sm:py-36 text-center bg-stone-50">
+        <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.1]">
+          Ready to <span className="text-primary">record?</span>
+        </h2>
+        <p className="mx-auto mt-5 max-w-lg text-lg text-stone-500 leading-relaxed">Secure your session in under a minute. Confirmation arrives instantly.</p>
+        <Button render={<Link href="/reserve" />} size="lg" className="mt-8 rounded-full px-10 py-6 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 transition-all font-semibold tracking-tight bg-primary border-0 text-white">Reserve a Spot</Button>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border/50 bg-background px-6 py-8 text-center text-sm text-stone-500">
+        <div className="mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Image src="/ebc-logo.png" alt="" width={24} height={24} className="rounded-full" />
+            <span className="font-serif font-bold text-foreground">EBC Studio</span>
+          </div>
+          <p>&copy; {new Date().getFullYear()} Ethiopian Broadcasting Corporation. All rights reserved.</p>
+        </div>
       </footer>
     </div>
   )

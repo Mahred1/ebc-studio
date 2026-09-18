@@ -90,8 +90,7 @@ export function CheckReservationForm() {
           </Button>
         </div>
         <FieldDescription>
-          A reference shows that one reservation. An email shows every reservation
-          booked with it.
+          A reference shows that one reservation. You can also use an email.
         </FieldDescription>
         <FieldError id={`${id}-query-error`}>{error}</FieldError>
       </Field>
