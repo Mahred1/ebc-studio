@@ -1,3 +1,5 @@
+import CancelButton from "@/app/check-reservation/CancelButton"
+import ReinstateButton from "@/app/check-reservation/ReinstateButton"
 import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import {
   CURRENCY,
@@ -65,6 +67,13 @@ export function ReservationDetails({
       <p className="mt-3 text-sm text-muted-foreground">{status.detail}</p>
 
       <ReservationRows reservation={reservation} />
+
+      <CancelButton reference={reservation.reference} status={reservation.status} />
+
+      <ReinstateButton
+        reference={reservation.reference}
+        reopenable={reservation.reopenable}
+      />
     </div>
   )
 }

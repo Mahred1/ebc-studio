@@ -36,6 +36,8 @@ const SELECT = {
   location: true,
   bid: true,
   createdAt: true,
+  canceledByUser: true,
+  reopenStatus: true,
 } as const
 
 /** Derived from the schema, so a column change surfaces here as a type error. */
@@ -58,6 +60,10 @@ function toView(row: Row): ReservationView {
     location: row.location,
     bid: row.bid.toFixed(2),
     createdAt: row.createdAt.toISOString(),
+    // A booker can reinstate only a cancellation they made themselves, and only
+    // when there's a stored status to restore. Never for admin-canceled rows.
+    reopenable:
+      row.status === "canceled" && row.canceledByUser && row.reopenStatus !== null,
   }
 }
 
@@ -89,6 +95,72 @@ export async function insertReservation(
     select: SELECT,
   })
 
+  return toView(row)
+}
+
+export async function cancelReservation(
+  reference: string
+): Promise<ReservationView | null> {
+  const referenceNo = parseReference(reference)
+  if (referenceNo === null) return null
+
+  const allowed = ["pending", "confirmed"]
+  const existing = await prisma.studioReservation.findUnique({
+    where: { referenceNo },
+    select: { status: true },
+  })
+  if (!existing || !allowed.includes(existing.status)) return null
+
+  // Mark this as a booker-initiated cancellation and remember the pre-cancel
+  // status so the check-reservation page can offer to reinstate it later.
+  const row = await prisma.studioReservation.update({
+    where: { referenceNo },
+    data: {
+      status: "canceled",
+      canceledByUser: true,
+      reopenStatus: existing.status,
+    },
+    select: SELECT,
+  })
+  return toView(row)
+}
+
+/**
+ * Reopens a reservation the *booker* canceled (pending/confirmed → canceled on
+ * the check-reservation page). Restores exactly the status it had before the
+ * cancel, and clears the cancel bookkeeping. Returns null when the row is not
+ * in the canceled status, wasn't canceled by the booker (e.g. the admin did),
+ * or has no stored status to restore — admin-canceled rows have no user path
+ * back.
+ */
+export async function reinstateReservation(
+  reference: string
+): Promise<ReservationView | null> {
+  const referenceNo = parseReference(reference)
+  if (referenceNo === null) return null
+
+  const existing = await prisma.studioReservation.findUnique({
+    where: { referenceNo },
+    select: { status: true, canceledByUser: true, reopenStatus: true },
+  })
+  if (
+    !existing ||
+    existing.status !== "canceled" ||
+    !existing.canceledByUser ||
+    existing.reopenStatus === null
+  ) {
+    return null
+  }
+
+  const row = await prisma.studioReservation.update({
+    where: { referenceNo },
+    data: {
+      status: existing.reopenStatus,
+      canceledByUser: false,
+      reopenStatus: null,
+    },
+    select: SELECT,
+  })
   return toView(row)
 }
 

@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { ChevronDownIcon, LoaderCircleIcon, SearchXIcon } from "lucide-react"
 
+import CancelButton from "../CancelButton"
+import ReinstateButton from "../ReinstateButton"
 import {
   ReservationDetails,
   ReservationRows,
@@ -129,6 +131,14 @@ export async function ReservationResults({ email }: { email: string }) {
                       {RESERVATION_STATUSES[reservation.status].detail}
                     </p>
                     <ReservationRows reservation={reservation} />
+                    <CancelButton
+                      reference={reservation.reference}
+                      status={reservation.status}
+                    />
+                    <ReinstateButton
+                      reference={reservation.reference}
+                      reopenable={reservation.reopenable}
+                    />
                   </div>
                 </details>
               ))}

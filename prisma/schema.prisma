@@ -56,6 +56,16 @@ model StudioReservation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// True when the booker canceled this reservation themselves on the
+  /// check-reservation page. Only these can be reinstated (reopened) by the
+  /// booker — an admin-canceled row keeps this false, so no user path exists.
+  canceledByUser Boolean @default(false)
+
+  /// The status a reinstatement should restore (pending or confirmed) — the
+  /// value the reservation had right before the booker canceled it. Only
+  /// meaningful while status is canceled; reinstating clears it.
+  reopenStatus ReservationStatus?
+
   // Lookups are by the public reference ("RES-10001") or by email. Index both;
   // channel is indexed because reservations are grouped by channel when
   // scheduling.

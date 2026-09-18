@@ -331,6 +331,8 @@ export type ReservationView = {
   location: string
   bid: string
   createdAt: string
+  /** True when the booker canceled this and can still reinstate it. */
+  reopenable: boolean
 }
 
 /**
