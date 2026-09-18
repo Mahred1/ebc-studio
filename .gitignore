@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Windows artifact (empty file created by a stray redirect)
 /nul
+.claude/settings.local.json
