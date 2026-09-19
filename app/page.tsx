@@ -5,6 +5,11 @@ import FaqAccordion from "./components/FaqAccordion"
 import { Reveal } from "./components/Reveal"
 import { getVisibleChannelOptions } from "@/lib/channels"
 
+// Reads the live channel inventory, which changes anytime a channel is
+// added, renamed, or hidden in the admin — a stale static build would serve
+// the old list.
+export const dynamic = "force-dynamic"
+
 export default async function Home() {
   const channels = await getVisibleChannelOptions()
 
