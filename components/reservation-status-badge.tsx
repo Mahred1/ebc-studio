@@ -7,6 +7,12 @@ import { RESERVATION_STATUSES, type ReservationStatus } from "@/lib/reservation"
 export const PENDING_BADGE_CLASS =
   "border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400"
 
+/** Solid neutral for cancelations — red is reserved for the rejected/declined
+ * badge, so a closed-out reservation gets a weightier gray with a strike
+ * through the label instead, and reads at a glance. */
+export const CANCELED_BADGE_CLASS =
+  "border-transparent bg-muted-foreground text-background line-through decoration-2"
+
 const STATUS_VARIANT: Record<
   ReservationStatus,
   React.ComponentProps<typeof Badge>["variant"]
@@ -21,7 +27,13 @@ export function ReservationStatusBadge({ status }: { status: ReservationStatus }
   return (
     <Badge
       variant={STATUS_VARIANT[status]}
-      className={status === "pending" ? PENDING_BADGE_CLASS : undefined}
+      className={
+        status === "pending"
+          ? PENDING_BADGE_CLASS
+          : status === "canceled"
+            ? CANCELED_BADGE_CLASS
+            : undefined
+      }
     >
       {RESERVATION_STATUSES[status].label}
     </Badge>

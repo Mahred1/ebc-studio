@@ -1,10 +1,14 @@
+import { LockKeyholeIcon } from "lucide-react"
+
 import CancelButton from "@/app/check-reservation/CancelButton"
 import ReinstateButton from "@/app/check-reservation/ReinstateButton"
+import { CopyCodeButton } from "@/components/copy-code-button"
 import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import {
   CURRENCY,
   RESERVATION_STATUSES,
   formatPhone,
+  maskReference,
   type ReservationView,
 } from "@/lib/reservation"
 
@@ -52,27 +56,49 @@ export function ReservationRows({
 
 export function ReservationDetails({
   reservation,
+  secure = false,
 }: {
   reservation: ReservationView
+  /** Email lookups hide the code and demand it before acting. */
+  secure?: boolean
 }) {
   const status = RESERVATION_STATUSES[reservation.status]
 
   return (
-    <div className="w-full rounded-xl border bg-card p-6 shadow-sm sm:p-8">
+    <div className="animate-fade-up w-full rounded-xl border bg-card p-6 shadow-sm sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="font-mono text-lg tracking-widest">{reservation.reference}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="font-mono text-lg tracking-widest">
+            {secure
+              ? maskReference(reservation.reference)
+              : reservation.reference}
+          </p>
+          {!secure && <CopyCodeButton value={reservation.reference} />}
+        </div>
         <ReservationStatusBadge status={reservation.status} />
       </div>
+
+      <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-500">
+        <LockKeyholeIcon className="size-3 shrink-0" />
+        {secure
+          ? "Your reservation code is hidden here — you'll need it to cancel or reinstate."
+          : "Keep this code secret — anyone with it can view or change your reservation."}
+      </p>
 
       <p className="mt-3 text-sm text-muted-foreground">{status.detail}</p>
 
       <ReservationRows reservation={reservation} />
 
-      <CancelButton reference={reservation.reference} status={reservation.status} />
+      <CancelButton
+        reference={reservation.reference}
+        status={reservation.status}
+        verifyReference={secure}
+      />
 
       <ReinstateButton
         reference={reservation.reference}
         reopenable={reservation.reopenable}
+        verifyReference={secure}
       />
     </div>
   )

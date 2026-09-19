@@ -7,7 +7,7 @@ export const CURRENCY = { code: "ETB", symbol: "Br" } as const
 
 /** Time-period options for filtering the admin bookings list. */
 export const BOOKING_PERIODS = {
-  all: "All time",
+  all: "All dates",
   today: "Today",
   "7d": "Last 7 days",
   "30d": "Last 30 days",
@@ -238,27 +238,33 @@ export function aggregateCustomers(
 /* ------------------------------------------------------------------ lookup */
 
 /**
- * Public reservation reference, e.g. RES-10001.
- *
- * The numeric part is a monotonic counter owned by the data layer — the
- * `StudioReservation.referenceNo` Postgres sequence, seeded to start at 10001 —
- * so references are unique by construction and need no collision retry. It's
- * zero-padded to 5 digits but allowed to grow past that, so the pattern accepts
- * 5 *or more*.
+ * A reservation's public reference: a 7-character code drawn from a 32-symbol
+ * alphabet — digits plus the unambiguous uppercase letters, excluding I, L, O
+ * and U so a printed code never gets mis-transcribed. The data layer generates
+ * codes with node:crypto (generateReservationCode in lib/reservations.ts), so
+ * each one is uniformly random over ~35 bits (32^7 ≈ 3.4e10) — unguessable,
+ * unlike the sequential RES-10001 references they replace. Because no one can
+ * enumerate valid references, holding a code is the ownership proof behind the
+ * public cancel/reinstate actions on the check-reservation page.
  */
-export const REFERENCE_PREFIX = "RES-"
-export const RESERVATION_ID_PATTERN = /^RES-\d{5,}$/i
+export const RESERVATION_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+export const RESERVATION_CODE_LENGTH = 7
+/** Codes are stored and looked up uppercase; the /i flag tolerates typed case. */
+export const RESERVATION_ID_PATTERN = new RegExp(
+  `^[${RESERVATION_CODE_ALPHABET}]{${RESERVATION_CODE_LENGTH}}$`,
+  "i"
+)
 
-export function formatReference(referenceNo: number): string {
-  return `${REFERENCE_PREFIX}${String(referenceNo).padStart(5, "0")}`
+/** Canonical stored form of a reference code, or null when it isn't one. */
+export function parseReference(value: string): string | null {
+  const trimmed = value.trim().toUpperCase()
+  if (!RESERVATION_ID_PATTERN.test(trimmed)) return null
+  return trimmed
 }
 
-/** Parses a reference back to its sequence number, or null if it isn't one. */
-export function parseReference(value: string): number | null {
-  const trimmed = value.trim()
-  if (!RESERVATION_ID_PATTERN.test(trimmed)) return null
-  const n = Number(trimmed.slice(REFERENCE_PREFIX.length))
-  return Number.isSafeInteger(n) && n > 0 ? n : null
+/** Bullet-masked stand-in for a reference shown without its owner's code. */
+export function maskReference(reference: string): string {
+  return reference.replace(/./g, "•")
 }
 
 /** Canonical URL for a single reservation. */
@@ -286,7 +292,7 @@ export function validateLookup(query: string): string | undefined {
   const value = query.trim()
   if (!value) return "Enter your reservation ID or the email you booked with."
   if (!lookupKind(value))
-    return "Use a reservation ID like RES-22112, or the email you booked with."
+    return "Use a reservation ID like A1B2C34, or the email you booked with."
   return undefined
 }
 
@@ -315,6 +321,9 @@ export const RESERVATION_STATUSES = {
 
 export type ReservationStatus = keyof typeof RESERVATION_STATUSES
 
+/** Status options the admin bookings filter accepts — statuses plus the archive toggle. */
+export type AdminStatusFilter = ReservationStatus | "archived"
+
 /**
  * A reservation as the UI consumes it: plain, serializable values only, so it
  * can cross the server/client boundary. Database rows are mapped into this
@@ -333,6 +342,8 @@ export type ReservationView = {
   createdAt: string
   /** True when the booker canceled this and can still reinstate it. */
   reopenable: boolean
+  /** True when an admin archived this reservation; hidden from email lookups. */
+  archived: boolean
 }
 
 /**

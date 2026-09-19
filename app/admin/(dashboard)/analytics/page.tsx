@@ -52,7 +52,7 @@ export default async function AdminAnalyticsPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="stat-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={CircleDollarSign}
           label="Estimated monthly revenue"

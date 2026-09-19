@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import FaqAccordion from "./components/FaqAccordion"
+import { Reveal } from "./components/Reveal"
 import { getVisibleChannelOptions } from "@/lib/channels"
 
 export default async function Home() {
@@ -19,7 +20,7 @@ export default async function Home() {
                 alt=""
                 width={32}
                 height={32}
-                className="rounded-full shadow-md ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all"
+                className="rounded-full shadow-md ring-2 ring-primary/20 group-hover:ring-primary/40 transition-shadow duration-200"
               />
             </div>
             <span className="font-serif text-lg font-bold tracking-tight leading-none">EBC Studio</span>
@@ -34,12 +35,12 @@ export default async function Home() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-stone-500 hover:text-foreground transition-colors relative after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-primary after:transition-all after:duration-300"
+                className="text-stone-500 hover:text-foreground transition-colors relative after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 hover:after:scale-x-100 after:bg-primary after:transition-transform after:duration-200 after:ease-out"
               >
                 {item.label}
               </Link>
             ))}
-            <Button render={<Link href="/reserve" />} className="ml-2 rounded-full px-5 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">Reserve</Button>
+            <Button render={<Link href="/reserve" />} className="ml-2 rounded-full px-5 shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-shadow duration-200 ease-out">Reserve</Button>
           </div>
 
           <Button render={<Link href="/reserve" />} className="rounded-full sm:hidden shadow-lg shadow-primary/20">Reserve</Button>
@@ -56,7 +57,7 @@ export default async function Home() {
         <Image src="/ebc-logo.png" alt="" width={50} height={50} priority className="absolute top-[55%] right-[3%] -rotate-45 opacity-[0.08] pointer-events-none select-none" />
         <Image src="/ebc-logo.png" alt="" width={130} height={130} priority className="absolute top-[22%] left-[50%] -rotate-6 opacity-[0.10] pointer-events-none select-none" />
         <div className="relative mx-auto max-w-6xl px-6 lg:px-10 pt-24 pb-28 sm:pt-32 sm:pb-36 lg:pt-40 lg:pb-44 text-center">
-          <div className="mx-auto mb-8 inline-block rounded-full overflow-hidden ring-1 ring-primary/30 p-1">
+          <div className="mx-auto mb-8 inline-block rounded-full overflow-hidden ring-1 ring-primary/30 p-1 animate-fade-up">
             <Image
               src="/ebc-logo.png"
               alt="EBC Studio"
@@ -67,24 +68,24 @@ export default async function Home() {
             />
           </div>
 
-          <h1 className="font-serif text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-[4.5rem]">
+          <h1 className="font-serif text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-[4.5rem] animate-fade-up" style={{ animationDelay: "60ms" }}>
             <span className="block text-foreground">Broadcast.</span>
             <span className="block text-primary">Record. Resonance.</span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-stone-500">
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-stone-500 animate-fade-up" style={{ animationDelay: "120ms" }}>
             Book a recording session at EBC studios in under a minute. Professional acoustics, broadcast-grade equipment, and a team that knows the craft.
           </p>
 
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row justify-center">
-            <Button render={<Link href="/reserve" />} size="lg" className="rounded-full px-8 py-6 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all bg-primary border-0 text-white font-semibold tracking-tight">
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row justify-center animate-fade-up" style={{ animationDelay: "180ms" }}>
+            <Button render={<Link href="/reserve" />} size="lg" className="rounded-full px-8 py-6 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-[0.98] transition-[transform,box-shadow] duration-200 ease-out bg-primary border-0 text-white font-semibold tracking-tight">
               Reserve a Spot
             </Button>
             <Button
               render={<Link href="/check-reservation" />}
               variant="outline"
               size="lg"
-              className="rounded-full px-8 py-6 text-lg border-border text-foreground hover:bg-muted hover:border-muted-foreground transition-all font-medium"
+              className="rounded-full px-8 py-6 text-lg border-border text-foreground hover:bg-muted hover:border-muted-foreground active:scale-[0.98] transition-colors duration-200 font-medium"
             >
               Check Reservation
             </Button>
@@ -100,25 +101,27 @@ export default async function Home() {
       {/* Why EBC */}
       <section id="why-ebc" className="mx-auto w-full max-w-6xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-stone-50">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          <div className="lg:col-span-4 lg:sticky lg:top-28">
+          <Reveal className="lg:col-span-4 lg:sticky lg:top-28">
             <h2 className="font-serif text-5xl sm:text-6xl font-bold leading-[1.1] tracking-tight">
               Why <span className="text-primary">EBC</span>
             </h2>
             <p className="mt-6 text-lg text-stone-500 leading-relaxed">A producer-first space: everything from sound treatment to crew support, designed around what actually makes great content.</p>
             <div className="mt-8 h-1 w-16 bg-primary rounded-full" />
-          </div>
+          </Reveal>
 
           <div className="lg:col-span-8 flex flex-col gap-6">
             {[
               { num: "01", title: "Dedicated Crew", desc: "A team is on hand before, during, and after — from booking to broadcast. No empty rooms, no solo struggles.", align: "left" as const },
               { num: "02", title: "Broadcast Studios", desc: "Purpose-built spaces with treated acoustics, controlled lighting, and room to work — built for the screen, not the showroom.", align: "right" as const },
               { num: "03", title: "Pro Equipment", desc: "Broadcast cameras, professional audio, and reliable recording gear — maintained by people who use it every day.", align: "left" as const },
-            ].map((item) => (
-              <div key={item.title} className={`group relative rounded-2xl border border-border/50 bg-stone-100/70 p-8 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/[0.05] transition-all hover:-translate-y-1 ${item.align === "right" ? "lg:ml-auto lg:max-w-[85%]" : ""}`}>
-                <div className="absolute top-4 right-5 font-mono text-5xl font-bold text-stone-500/10 select-none group-hover:text-primary/10 transition-colors">{item.num}</div>
-                <h3 className="font-serif text-2xl font-bold tracking-tight">{item.title}</h3>
-                <dd className="mt-3 text-sm leading-relaxed text-stone-500">{item.desc}</dd>
-              </div>
+            ].map((item, i) => (
+              <Reveal key={item.title} delay={i * 60}>
+                <div className={`group relative rounded-2xl border border-border/50 bg-stone-100/70 p-8 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/[0.05] hover:-translate-y-1 transition-[transform,box-shadow,border-color] duration-300 ease-out ${item.align === "right" ? "lg:ml-auto lg:max-w-[85%]" : ""}`}>
+                  <div className="absolute top-4 right-5 font-mono text-5xl font-bold text-stone-500/10 select-none group-hover:text-primary/10 transition-colors">{item.num}</div>
+                  <h3 className="font-serif text-2xl font-bold tracking-tight">{item.title}</h3>
+                  <dd className="mt-3 text-sm leading-relaxed text-stone-500">{item.desc}</dd>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -142,13 +145,15 @@ export default async function Home() {
             { num: "01", title: "Choose a Channel", desc: "Browse available television channels open for reservations. Each listed with live status.", icon: "▶" },
             { num: "02", title: "Enter Your Details", desc: "Name, email, and phone — just enough to confirm. No unnecessary forms.", icon: "✎" },
             { num: "03", title: "Get Confirmed", desc: "An instant reservation ID. Check status anytime with it.", icon: "✓" },
-          ].map((step) => (
-            <li key={step.num} className="relative flex flex-col text-left sm:text-center">
-              <div className="mx-auto sm:mx-0 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white text-xl shadow-xl shadow-primary/25 ring-4 ring-background z-10 mb-6 font-serif font-bold">
-                {step.num}
-              </div>
-              <h3 className="font-serif text-2xl font-bold tracking-tight">{step.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-stone-500 max-w-xs mx-auto sm:mx-0">{step.desc}</p>
+          ].map((step, i) => (
+            <li key={step.num} className="relative">
+              <Reveal delay={i * 60} className="flex flex-col text-left sm:text-center">
+                <div className="mx-auto sm:mx-0 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white text-xl shadow-xl shadow-primary/25 ring-4 ring-background z-10 mb-6 font-serif font-bold">
+                  {step.num}
+                </div>
+                <h3 className="font-serif text-2xl font-bold tracking-tight">{step.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-stone-500 max-w-xs mx-auto sm:mx-0">{step.desc}</p>
+              </Reveal>
             </li>
           ))}
         </ol>
@@ -168,15 +173,21 @@ export default async function Home() {
               </div>
             </div>
 
-            <div className="divide-y divide-border/60 border-t border-b border-border rounded-2xl overflow-hidden bg-stone-100/80">
+            <div className="border-t border-b border-border rounded-2xl overflow-hidden bg-stone-100/80">
               {channels.map((ch, i) => (
-                <Link key={ch.value} href="/reserve" className="group flex items-center justify-between px-6 py-4 hover:bg-muted/20 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <span className="font-mono text-xs text-stone-500 w-6">{String(i + 1).padStart(2, "0")}</span>
-                    <h3 className="font-serif text-xl font-bold tracking-tight group-hover:text-primary transition-colors">{ch.label}</h3>
-                  </div>
-                  <span className="text-primary text-base font-bold opacity-100 group-hover:translate-x-1 transition-all" aria-hidden="true">→</span>
-                </Link>
+                <Reveal
+                  key={ch.value}
+                  delay={Math.min(i * 40, 200)}
+                  className={i === 0 ? "" : "border-t border-border/60"}
+                >
+                  <Link href="/reserve" className="group flex items-center justify-between px-6 py-4 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono text-xs text-stone-500 w-6">{String(i + 1).padStart(2, "0")}</span>
+                      <h3 className="font-serif text-xl font-bold tracking-tight group-hover:text-primary transition-colors">{ch.label}</h3>
+                    </div>
+                    <span className="text-primary text-base font-bold opacity-100 group-hover:translate-x-1 transition-transform duration-200 ease-out" aria-hidden="true">→</span>
+                  </Link>
+                </Reveal>
               ))}
             </div>
           </section>
@@ -187,19 +198,23 @@ export default async function Home() {
 
       {/* FAQ */}
       <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-white">
-        <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-center">Frequently Asked</h2>
-        <p className="mt-3 text-center text-stone-500">Quick answers — if you need more, reserve and ask directly.</p>
+        <Reveal>
+          <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-center">Frequently Asked</h2>
+          <p className="mt-3 text-center text-stone-500">Quick answers — if you need more, reserve and ask directly.</p>
 
-        <FaqAccordion />
+          <FaqAccordion />
+        </Reveal>
       </section>
 
       {/* CTA — editorial closing */}
       <section className="mx-auto w-full max-w-6xl px-6 lg:px-10 py-28 sm:py-36 text-center bg-stone-50">
+        <Reveal>
         <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.1]">
           Ready to <span className="text-primary">record?</span>
         </h2>
         <p className="mx-auto mt-5 max-w-lg text-lg text-stone-500 leading-relaxed">Secure your session in under a minute. Confirmation arrives instantly.</p>
-        <Button render={<Link href="/reserve" />} size="lg" className="mt-8 rounded-full px-10 py-6 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 transition-all font-semibold tracking-tight bg-primary border-0 text-white">Reserve a Spot</Button>
+        <Button render={<Link href="/reserve" />} size="lg" className="mt-8 rounded-full px-10 py-6 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 active:scale-[0.98] transition-[transform,box-shadow] duration-200 ease-out font-semibold tracking-tight bg-primary border-0 text-white">Reserve a Spot</Button>
+        </Reveal>
       </section>
 
       {/* Footer */}

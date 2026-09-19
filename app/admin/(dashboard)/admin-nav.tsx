@@ -49,7 +49,7 @@ export function AdminNav() {
                 )}
               >
                 {active && (
-                  <span className="absolute inset-y-2.5 left-0 w-[3px] rounded-r-full bg-primary" />
+                  <span className="animate-nav-indicator absolute inset-y-2.5 left-0 w-[3px] rounded-r-full bg-primary" />
                 )}
                 <Icon
                   className={cn(

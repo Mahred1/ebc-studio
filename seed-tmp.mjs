@@ -10,7 +10,7 @@ const prisma = new PrismaClient({
 })
 
 const rows = await prisma.studioReservation.findMany({
-  select: { id: true, referenceNo: true, fullName: true, email: true, createdAt: true },
+  select: { id: true, code: true, fullName: true, email: true, createdAt: true },
   orderBy: { id: "asc" },
 })
 console.log(JSON.stringify(rows, null, 2))

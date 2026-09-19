@@ -5,6 +5,7 @@
 // reads in `lib/reservations.ts` and deliberately are NOT actions.
 
 import { getVisibleChannelNames } from "@/lib/channels"
+import { getRequestOrigin, sendReservationEmail } from "@/lib/mailer"
 import {
   validateReservation,
   type CreateReservationResult,
@@ -46,7 +47,15 @@ export async function createReservation(
   }
 
   try {
-    return { ok: true, reservation: await insertReservation(draft) }
+    const reservation = await insertReservation(draft)
+
+    // A booked reference is the email's whole point — the form even promises
+    // it ("We'll send your reservation reference here"). Sending is await-ed
+    // so the notification is gone before the user sees the confirmation, but
+    // it's non-fatal: sendReservationEmail catches its own failures.
+    await sendReservationEmail(reservation, await getRequestOrigin(), "received")
+
+    return { ok: true, reservation }
   } catch (error) {
     console.error("createReservation failed", error)
     return {

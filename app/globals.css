@@ -114,6 +114,14 @@
   --shadow-2xl: 0 1px 4px 0px hsl(0 0% 0% / 0.25);
 }
 
+/* Motion curves — overrides Tailwind's weak built-in easings. These are the
+   canonical curves every transition in the app resolves to. */
+@theme {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -175,5 +183,141 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* --- Motion tokens ------------------------------------------------------
+   Keyframes and utilities shared across the app. Entrance moves are tiny
+   (4px) on purpose: they bridge a route/content change, not announce it.
+   Note: Tailwind 4 already gates every `hover:` utility behind `(hover:hover)`,
+   so hover-driven motion never fires on touch. */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nav-indicator-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 260ms var(--ease-out) both;
+}
+
+@utility animate-fade-in {
+  animation: fade-in 160ms var(--ease-out) both;
+}
+
+@utility animate-nav-indicator {
+  transform-origin: left;
+  animation: nav-indicator-in 180ms var(--ease-out) both;
+}
+
+/* Stat tiles on the admin dashboard — a 40ms stagger so a grid settles one
+   card at a time instead of teleporting in as one block. */
+.stat-grid > * {
+  animation: fade-up 260ms var(--ease-out) both;
+}
+.stat-grid > :nth-child(2) {
+  animation-delay: 40ms;
+}
+.stat-grid > :nth-child(3) {
+  animation-delay: 80ms;
+}
+.stat-grid > :nth-child(4) {
+  animation-delay: 120ms;
+}
+.stat-grid > :nth-child(5) {
+  animation-delay: 160ms;
+}
+.stat-grid > :nth-child(6) {
+  animation-delay: 200ms;
+}
+
+/* --- Home page scroll reveal ------------------------------------------
+   Marketing surface only (see RECIPES: scroll reveal). Sections below the
+   fold reveal once with the same 4px fade-up as everything else, then stay
+   static — re-animating on every scroll-by is an interface fighting its
+   reader. Entry is armed on the client (data-armed + data-revealed set by
+   the Reveal component in app/components/Reveal.tsx); without JS the base
+   rule keeps everything visible, so a broken script never hides the page. */
+.home-reveal {
+  opacity: 1;
+}
+.home-reveal[data-armed]:not([data-revealed]) {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.home-reveal[data-revealed] {
+  animation: fade-up 260ms var(--ease-out) both;
+}
+
+/* --- Native <dialog> entrance/exit -------------------------------------
+   `overlay` + `display` with allow-discrete let the browser animate the
+   element and its ::backdrop both ways around showModal()/close(), no JS.
+   Modals are centered (m-auto), so they scale from center — no trigger
+   origin needed. */
+dialog {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity 250ms var(--ease-out),
+    transform 250ms var(--ease-out),
+    overlay 250ms var(--ease-out) allow-discrete,
+    display 250ms var(--ease-out) allow-discrete;
+}
+
+dialog[open] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+dialog::backdrop {
+  opacity: 0;
+  transition:
+    opacity 250ms var(--ease-out),
+    overlay 250ms var(--ease-out) allow-discrete,
+    display 250ms var(--ease-out) allow-discrete;
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+}
+
+/* --- Reduced motion ----------------------------------------------------
+   Keep the state changes, drop the motion. Durations go near-zero so fades,
+   scale, height collapse and dialog slides all resolve instantly while the
+   color/state information itself is preserved. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -22,10 +22,18 @@ export default function FaqAccordion() {
             aria-controls={`faq-${i}`}
           >
             <h3 className="font-semibold text-lg tracking-tight">{faq.q}</h3>
-            <span className={`ml-4 text-2xl leading-none text-muted-foreground transition-transform duration-200 ${open === i ? 'rotate-45' : ''}`} aria-hidden="true">+</span>
+            <span className={`ml-4 text-2xl leading-none text-muted-foreground transition-transform duration-200 ease-out ${open === i ? 'rotate-45' : ''}`} aria-hidden="true">+</span>
           </button>
-          <div id={`faq-${i}`} className={`px-6 pb-5 text-muted-foreground leading-relaxed ${open === i ? 'block' : 'hidden'}`}>
-            {faq.a}
+          {/* Grid rows animate the reveal — the sanctioned accordion exception.
+              The inner div clips; the transition retargets if you click again
+              mid-open, so it never restarts from zero. */}
+          <div
+            id={`faq-${i}`}
+            className={`grid transition-[grid-template-rows] duration-200 ease-out ${open === i ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+          >
+            <div className="overflow-hidden">
+              <div className="px-6 pb-5 text-muted-foreground leading-relaxed">{faq.a}</div>
+            </div>
           </div>
         </div>
       ))}

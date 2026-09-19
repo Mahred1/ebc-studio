@@ -64,7 +64,7 @@ export function CheckReservationForm() {
             id={`${id}-query`}
             ref={inputRef}
             name="query"
-            placeholder="RES-10001"
+            placeholder="A1B2C34"
             value={query}
             autoComplete="off"
             className="h-9 sm:flex-1"

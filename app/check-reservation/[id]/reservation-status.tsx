@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { LoaderCircleIcon, SearchXIcon } from "lucide-react"
+import { ArchiveIcon, LoaderCircleIcon, SearchXIcon } from "lucide-react"
 
 import { ReservationDetails } from "@/components/reservation-details"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,7 @@ export async function ReservationStatus({ reference }: { reference: string }) {
 
   if (!reservation) {
     return (
-      <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
+      <div className="animate-fade-up flex w-full flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
         <SearchXIcon className="size-8 text-muted-foreground" />
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">No reservation found</h2>
@@ -40,6 +40,31 @@ export async function ReservationStatus({ reference }: { reference: string }) {
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button render={<Link href="/check-reservation" />} variant="outline" size="lg">
             Try another reference
+          </Button>
+          <Button render={<Link href="/reserve" />} size="lg">
+            Reserve a spot
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // An archived reservation exists but is off the public record — the holder
+  // learns it was archived, nothing more. Email lookups never return it at all.
+  if (reservation.archived) {
+    return (
+      <div className="animate-fade-up flex w-full flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
+        <ArchiveIcon className="size-8 text-muted-foreground" />
+        <div className="flex flex-col gap-1">
+          <h2 className="font-medium">Reservation archived</h2>
+          <p className="text-sm text-muted-foreground">
+            This reservation was archived by an administrator and its details
+            are no longer available.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button render={<Link href="/check-reservation" />} variant="outline" size="lg">
+            Check another reservation
           </Button>
           <Button render={<Link href="/reserve" />} size="lg">
             Reserve a spot

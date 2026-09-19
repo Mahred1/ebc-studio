@@ -152,7 +152,7 @@ export function RevenueChart({ data }: { data: RevenuePoint[] }) {
 
       {hover !== null && data[hover].revenue > 0 ? (
         <div
-          className="pointer-events-none absolute select-none rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background"
+          className="animate-fade-in pointer-events-none absolute select-none rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background"
           style={{
             left: `${((PAD_LEFT + hover * slot + slot / 2) / W) * 100}%`,
             top: `${(base - Math.round((data[hover].revenue / top) * plotH)) / H * 100}%`,

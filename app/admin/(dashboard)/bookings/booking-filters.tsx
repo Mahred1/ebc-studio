@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/select"
 import {
   BOOKING_PERIODS,
+  type AdminStatusFilter,
   type BookingPeriod,
-  type ReservationStatus,
 } from "@/lib/reservation"
 
 const STATUS_FILTERS = [
@@ -23,10 +23,11 @@ const STATUS_FILTERS = [
   { value: "confirmed", label: "Confirmed" },
   { value: "declined", label: "Rejected" },
   { value: "canceled", label: "Canceled" },
+  { value: "archived", label: "Archived" },
 ] as const
 
 export type BookingFilterState = {
-  status: ReservationStatus | ""
+  status: AdminStatusFilter | ""
   channel: string
   period: BookingPeriod
 }
@@ -70,7 +71,7 @@ export function BookingFilters({
               key={option.value || "all"}
               type="button"
               aria-pressed={active}
-              onClick={() => go({ status: option.value as ReservationStatus | "" })}
+              onClick={() => go({ status: option.value as AdminStatusFilter | "" })}
               className={cn(
                 "h-8 rounded-lg px-3 text-sm font-medium transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -93,7 +94,7 @@ export function BookingFilters({
           }
         >
           <SelectTrigger size="sm" aria-label="Filter by channel">
-            <SelectValue />
+            <SelectValue>{`Channel: ${channel === "" ? "All channels" : channel}`}</SelectValue>
           </SelectTrigger>
           <SelectContent align="end">
             <SelectItem value="all">All channels</SelectItem>
@@ -110,7 +111,7 @@ export function BookingFilters({
           onValueChange={(value) => go({ period: value as BookingPeriod })}
         >
           <SelectTrigger size="sm" aria-label="Filter by time period">
-            <SelectValue />
+            <SelectValue>{`Dates: ${BOOKING_PERIODS[period]}`}</SelectValue>
           </SelectTrigger>
           <SelectContent align="end">
             {Object.entries(BOOKING_PERIODS).map(([value, label]) => (

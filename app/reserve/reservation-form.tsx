@@ -339,7 +339,7 @@ export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
         {formError ? (
           <p
             role="alert"
-            className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="animate-fade-in rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
             {formError}
           </p>
@@ -362,7 +362,7 @@ function Confirmation({
   onReset: () => void
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="animate-fade-up flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <CircleCheckIcon className="size-8 text-primary" />
         <h2 className="text-xl font-semibold">Spot reserved</h2>

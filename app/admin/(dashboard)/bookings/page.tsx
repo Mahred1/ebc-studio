@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth"
 import {
   BOOKING_PERIODS,
+  type AdminStatusFilter,
   type BookingPeriod,
-  type ReservationStatus,
 } from "@/lib/reservation"
 import { getBookings } from "@/lib/reservations"
 import {
@@ -32,17 +32,19 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-const STATUSES: ReadonlyArray<ReservationStatus> = [
+const STATUSES: ReadonlyArray<AdminStatusFilter> = [
   "pending",
   "confirmed",
   "declined",
   "canceled",
+  "archived",
 ]
 const PERIODS = Object.keys(BOOKING_PERIODS) as BookingPeriod[]
 
-function parseStatus(value: unknown): ReservationStatus | "" {
-  return typeof value === "string" && STATUSES.includes(value as ReservationStatus)
-    ? (value as ReservationStatus)
+function parseStatus(value: unknown): AdminStatusFilter | "" {
+  return typeof value === "string" &&
+    STATUSES.includes(value as AdminStatusFilter)
+    ? (value as AdminStatusFilter)
     : ""
 }
 
@@ -54,8 +56,8 @@ function parsePeriod(value: unknown): BookingPeriod {
 
 /** Builds a bookings URL preserving the current filters, for pagination links. */
 function bookingsHref(
-  patch: { status?: ReservationStatus | ""; channel?: string; period?: BookingPeriod; page?: number },
-  current: { status: ReservationStatus | ""; channel: string; period: BookingPeriod }
+  patch: { status?: AdminStatusFilter | ""; channel?: string; period?: BookingPeriod; page?: number },
+  current: { status: AdminStatusFilter | ""; channel: string; period: BookingPeriod }
 ): string {
   const next = { status: current.status, channel: current.channel, period: current.period, page: 1, ...patch }
   const params = new URLSearchParams()
@@ -98,11 +100,11 @@ export default async function AdminBookingsPage({
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-primary">Bookings</h1>
         <p className="text-muted-foreground">
-          Review, accept, reject — and cancel a confirmed booking.
+          Review, accept, reject, cancel — and archive a booking.
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="stat-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           icon={ListChecks}
           label="Total"
@@ -175,7 +177,8 @@ export default async function AdminBookingsPage({
                   key={row.reference}
                   className={cn(
                     "border-b last:border-0",
-                    row.status === "canceled" && "text-muted-foreground/70"
+                    (row.status === "canceled" || row.archived) &&
+                      "text-muted-foreground/70"
                   )}
                 >
                   <td className="px-5 py-4">
@@ -192,7 +195,11 @@ export default async function AdminBookingsPage({
                     {formatReservationDate(row.createdAt)}
                   </td>
                   <td className="px-5 py-4">
-                    <BookingActions reference={row.reference} status={row.status} />
+                    <BookingActions
+                      reference={row.reference}
+                      status={row.status}
+                      archived={row.archived}
+                    />
                   </td>
                 </tr>
               ))}

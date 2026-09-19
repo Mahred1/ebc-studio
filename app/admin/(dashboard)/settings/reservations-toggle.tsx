@@ -26,15 +26,15 @@ export function ReservationsToggle({ paused }: { paused: boolean }) {
         startTransition(async () => setReservationsPaused(!paused))
       }
       className={cn(
-        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+        "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-150 ease-[var(--ease-out)]",
         paused ? "bg-destructive" : "bg-secondary",
         pending && "opacity-60"
       )}
     >
       <span
         className={cn(
-          "absolute top-0.5 size-5 rounded-full bg-background shadow transition-all",
-          paused ? "left-[calc(100%-1.375rem)]" : "left-0.5"
+          "absolute top-0.5 left-0.5 size-5 rounded-full bg-background shadow transition-transform duration-150 ease-[var(--ease-out)]",
+          paused ? "translate-x-5" : "translate-x-0"
         )}
       />
       {pending && (
