@@ -27,7 +27,7 @@ export default async function ReservePage() {
     <main className="flex min-h-dvh w-full justify-center px-4 py-10 sm:py-16">
       <div className="flex w-full max-w-lg flex-col gap-8">
         <header className="flex flex-col items-center gap-2 text-center">
-          <link href="/">
+          <Link href="/">
             <Image
               src="/ebc-logo.png"
               alt="Ethiopian Broadcasting Corporation logo"
@@ -35,7 +35,7 @@ export default async function ReservePage() {
               height={64}
               className="rounded-full"
             />
-          </link>
+          </Link>
           <h1 className="mt-3 font-serif text-3xl font-bold sm:text-4xl">
             Welcome to Ethiopian Television
           </h1>
