@@ -65,20 +65,21 @@ export async function createAdmin(
  * else, but a server action is a public endpoint — the check that matters is
  * this one, and it reads isPrimary from the database rather than the form.
  */
-export async function deleteAdmin(formData: FormData): Promise<void> {
+export async function deleteAdmin(formData: FormData): Promise<{ ok: boolean }> {
   const viewer = await requireAdmin()
 
   const id = Number(formData.get("id"))
-  if (!viewer.isPrimary || !Number.isSafeInteger(id)) return
+  if (!viewer.isPrimary || !Number.isSafeInteger(id)) return { ok: false }
 
   // Refusing self-deletion keeps at least one account that can delete admins;
   // the primary flag is never reassigned, so losing it would be permanent.
-  if (id === viewer.id) return
+  if (id === viewer.id) return { ok: false }
 
   // deleteMany, not delete: a row already removed in another tab is a no-op
   // here rather than an unhandled error.
-  await prisma.admin.deleteMany({ where: { id } })
-  revalidatePath(SETTINGS_PATH)
+  const { count } = await prisma.admin.deleteMany({ where: { id } })
+  if (count > 0) revalidatePath(SETTINGS_PATH)
+  return { ok: count > 0 }
 }
 
 /**
@@ -86,7 +87,7 @@ export async function deleteAdmin(formData: FormData): Promise<void> {
  * page and the create action both re-read the flag from the database rather
  * than trusting this call, so the toggle takes effect on the next request.
  */
-export async function setReservationsPaused(paused: boolean): Promise<void> {
+export async function setReservationsPaused(paused: boolean): Promise<{ ok: boolean }> {
   await requireAdmin()
 
   await prisma.siteSettings.upsert({
@@ -99,4 +100,5 @@ export async function setReservationsPaused(paused: boolean): Promise<void> {
   // The reserve page renders on the flag; without this it would serve stale
   // output until some unrelated revalidation came along.
   revalidatePath(RESERVE_PATH)
+  return { ok: true }
 }

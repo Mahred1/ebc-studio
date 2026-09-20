@@ -1,5 +1,7 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 
+import { TableSkeleton } from "@/components/suspense-ui"
 import { requireAdmin } from "@/lib/auth"
 import { getCustomers } from "@/lib/reservations"
 import { CustomersTable } from "./customers-table"
@@ -11,9 +13,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
+/** Heading renders immediately; the table streams in after getCustomers. */
 export default async function AdminCustomersPage() {
   await requireAdmin()
-  const customers = await getCustomers()
 
   return (
     <div className="flex flex-col gap-8">
@@ -25,7 +27,14 @@ export default async function AdminCustomersPage() {
         </p>
       </header>
 
-      <CustomersTable customers={customers} />
+      <Suspense fallback={<TableSkeleton rows={6} cells={4} />}>
+        <CustomersSection />
+      </Suspense>
     </div>
   )
+}
+
+async function CustomersSection() {
+  const customers = await getCustomers()
+  return <CustomersTable customers={customers} />
 }

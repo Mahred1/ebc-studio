@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -11,8 +12,6 @@ import { getVisibleChannelOptions } from "@/lib/channels"
 export const dynamic = "force-dynamic"
 
 export default async function Home() {
-  const channels = await getVisibleChannelOptions()
-
   return (
     <div className="flex flex-1 flex-col bg-background font-sans text-foreground">
       {/* Nav */}
@@ -167,39 +166,11 @@ export default async function Home() {
       {/* Divider */}
       <div className="mx-auto w-full max-w-6xl border-t border-border" />
 
-      {/* Channels — visual cards instead of table */}
-      {channels.length > 0 && (
-        <>
-          <section id="channels" className="mx-auto w-full max-w-6xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-stone-50">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
-              <div>
-                <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight">Available Channels</h2>
-                <p className="mt-3 text-stone-500 text-lg">Open for reservations today. Pick the one you are producing for.</p>
-              </div>
-            </div>
-
-            <div className="border-t border-b border-border rounded-2xl overflow-hidden bg-stone-100/80">
-              {channels.map((ch, i) => (
-                <Reveal
-                  key={ch.value}
-                  delay={Math.min(i * 40, 200)}
-                  className={i === 0 ? "" : "border-t border-border/60"}
-                >
-                  <Link href="/reserve" className="group flex items-center justify-between px-6 py-4 hover:bg-muted/20 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <span className="font-mono text-xs text-stone-500 w-6">{String(i + 1).padStart(2, "0")}</span>
-                      <h3 className="font-serif text-xl font-bold tracking-tight group-hover:text-primary transition-colors">{ch.label}</h3>
-                    </div>
-                    <span className="text-primary text-base font-bold opacity-100 group-hover:translate-x-1 transition-transform duration-200 ease-out" aria-hidden="true">→</span>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          <div className="mx-auto w-full max-w-6xl border-t border-stone-200/60" />
-        </>
-      )}
+      {/* Channels — visual cards instead of table; the inventory read is the
+          page's only live query, so it streams in behind the rest. */}
+      <Suspense fallback={null}>
+        <ChannelsSection />
+      </Suspense>
 
       {/* FAQ */}
       <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-white">
@@ -233,5 +204,45 @@ export default async function Home() {
         </div>
       </footer>
     </div>
+  )
+}
+
+/** The channel list and its trailing divider — hidden when nothing is live. */
+async function ChannelsSection() {
+  const channels = await getVisibleChannelOptions()
+
+  if (channels.length === 0) return null
+
+  return (
+    <>
+      <section id="channels" className="mx-auto w-full max-w-6xl scroll-mt-16 px-6 lg:px-10 py-24 sm:py-32 bg-stone-50">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
+          <div>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight">Available Channels</h2>
+            <p className="mt-3 text-stone-500 text-lg">Open for reservations today. Pick the one you are producing for.</p>
+          </div>
+        </div>
+
+        <div className="border-t border-b border-border rounded-2xl overflow-hidden bg-stone-100/80">
+          {channels.map((ch, i) => (
+            <Reveal
+              key={ch.value}
+              delay={Math.min(i * 40, 200)}
+              className={i === 0 ? "" : "border-t border-border/60"}
+            >
+              <Link href="/reserve" className="group flex items-center justify-between px-6 py-4 hover:bg-muted/20 transition-colors">
+                <div className="flex items-center gap-4">
+                  <span className="font-mono text-xs text-stone-500 w-6">{String(i + 1).padStart(2, "0")}</span>
+                  <h3 className="font-serif text-xl font-bold tracking-tight group-hover:text-primary transition-colors">{ch.label}</h3>
+                </div>
+                <span className="text-primary text-base font-bold opacity-100 group-hover:translate-x-1 transition-transform duration-200 ease-out" aria-hidden="true">→</span>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <div className="mx-auto w-full max-w-6xl border-t border-stone-200/60" />
+    </>
   )
 }

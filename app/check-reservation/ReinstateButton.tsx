@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { LoaderCircleIcon, RotateCcwIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,12 +40,17 @@ export default function ReinstateButton({
       return
     }
     startTransition(async () => {
-      const res = await reinstateReservationAction(reference)
-      if (res.ok) {
-        router.refresh()
-        return
+      try {
+        const res = await reinstateReservationAction(reference)
+        if (res.ok) {
+          toast.success("Reservation reinstated.")
+          router.refresh()
+          return
+        }
+        toast.error(res.error ?? "Failed to reinstate reservation.")
+      } catch {
+        toast.error("Failed to reinstate reservation.")
       }
-      setError(res.error ?? "Failed to reinstate reservation.")
     })
   }
 

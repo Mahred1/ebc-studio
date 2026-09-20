@@ -1,7 +1,9 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import { cn } from "cn"
 
 import { Badge } from "@/components/ui/badge"
+import { CardSkeleton } from "@/components/suspense-ui"
 import { requireAdmin } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getSiteSettings } from "@/lib/site-settings"
@@ -18,13 +20,12 @@ export const metadata: Metadata = {
 // refreshes it after every write.
 export const dynamic = "force-dynamic"
 
+/**
+ * Header renders right away; the reservations panel and admin table stream in
+ * after getSiteSettings and the admin list resolve.
+ */
 export default async function AdminSettingsPage() {
   const viewer = await requireAdmin()
-  const { reservationsPaused } = await getSiteSettings()
-  const admins = await prisma.admin.findMany({
-    select: { id: true, username: true, isPrimary: true, createdAt: true },
-    orderBy: { id: "asc" },
-  })
 
   return (
     <div className="flex flex-col gap-8">
@@ -38,6 +39,27 @@ export default async function AdminSettingsPage() {
         <AddAdminDialog />
       </header>
 
+      <Suspense fallback={<SettingsFallback />}>
+        <SettingsSection viewer={viewer} />
+      </Suspense>
+    </div>
+  )
+}
+
+/** The two data-bound panels; the viewer row is what marks "You" in the table. */
+async function SettingsSection({
+  viewer,
+}: {
+  viewer: { id: number; isPrimary: boolean }
+}) {
+  const { reservationsPaused } = await getSiteSettings()
+  const admins = await prisma.admin.findMany({
+    select: { id: true, username: true, isPrimary: true, createdAt: true },
+    orderBy: { id: "asc" },
+  })
+
+  return (
+    <div className="flex flex-col gap-8">
       <section className="overflow-hidden rounded-xl border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b px-5 py-4">
           <div className="flex flex-col gap-1">
@@ -126,6 +148,15 @@ export default async function AdminSettingsPage() {
           </tbody>
         </table>
       </section>
+    </div>
+  )
+}
+
+function SettingsFallback() {
+  return (
+    <div className="flex flex-col gap-8">
+      <CardSkeleton rows={2} />
+      <CardSkeleton rows={3} />
     </div>
   )
 }

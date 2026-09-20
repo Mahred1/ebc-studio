@@ -2,6 +2,7 @@
 // https://tailwindcss.com/docs/font-family
 import type { Metadata } from "next";
 import { Inter, Noto_Serif_Georgian, JetBrains_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -34,6 +35,14 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         {children}
+        <Toaster
+          theme="light"
+          position="bottom-right"
+          richColors
+          closeButton
+          offset={24}
+          toastOptions={{ style: { boxShadow: "var(--shadow-sm)" } }}
+        />
       </body>
     </html>
   );

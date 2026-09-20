@@ -1,7 +1,9 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 
 import { PENDING_BADGE_CLASS } from "@/components/reservation-status-badge"
 import { StatCard } from "@/components/stat-card"
+import { StatGridSkeleton, TableSkeleton } from "@/components/suspense-ui"
 import { Badge } from "@/components/ui/badge"
 import { requireAdmin } from "@/lib/auth"
 import { CURRENCY } from "@/lib/reservation"
@@ -47,16 +49,13 @@ const STATUS_BADGE = {
   canceled: "outline",
 } as const
 
+/**
+ * The page shell renders as soon as the (cheap) auth check resolves; only the
+ * aggregate-heavy overview waits, streamed in behind its own skeleton so the
+ * heading never hangs on the numbers below it.
+ */
 export default async function AdminDashboardPage() {
   const admin = await requireAdmin()
-  const overview = await getOverview()
-
-  const occupancyPct =
-    overview.totalChannels === 0
-      ? "—"
-      : `${Math.round(
-          (overview.occupiedChannels / overview.totalChannels) * 100
-        )}%`
 
   return (
     <div className="flex flex-col gap-8">
@@ -67,6 +66,26 @@ export default async function AdminDashboardPage() {
         </p>
       </header>
 
+      <Suspense fallback={<OverviewFallback />}>
+        <OverviewSection />
+      </Suspense>
+    </div>
+  )
+}
+
+/** The stat cards and upcoming-sessions table — the only DB-bound parts. */
+async function OverviewSection() {
+  const overview = await getOverview()
+
+  const occupancyPct =
+    overview.totalChannels === 0
+      ? "—"
+      : `${Math.round(
+          (overview.occupiedChannels / overview.totalChannels) * 100
+        )}%`
+
+  return (
+    <>
       <div className="stat-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={Radio}
@@ -161,6 +180,15 @@ export default async function AdminDashboardPage() {
           </p>
         ) : null}
       </section>
+    </>
+  )
+}
+
+function OverviewFallback() {
+  return (
+    <div className="flex flex-col gap-8">
+      <StatGridSkeleton count={6} className="sm:grid-cols-2 lg:grid-cols-3" />
+      <TableSkeleton rows={3} />
     </div>
   )
 }

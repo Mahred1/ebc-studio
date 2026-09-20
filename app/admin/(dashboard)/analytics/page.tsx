@@ -1,6 +1,12 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 
 import { StatCard } from "@/components/stat-card"
+import {
+  CardSkeleton,
+  StatGridSkeleton,
+  TableSkeleton,
+} from "@/components/suspense-ui"
 import { requireAdmin } from "@/lib/auth"
 import { CURRENCY } from "@/lib/reservation"
 import { getAnalytics } from "@/lib/reservations"
@@ -32,8 +38,27 @@ function formatDate(iso: string): string {
   })
 }
 
+/** Heading renders instantly; the stats, chart and table wait on one read. */
 export default async function AdminAnalyticsPage() {
   await requireAdmin()
+
+  return (
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold text-primary">Analytics</h1>
+        <p className="text-muted-foreground">
+          Live numbers from reservations — revenue counts confirmed bookings only.
+        </p>
+      </header>
+
+      <Suspense fallback={<AnalyticsFallback />}>
+        <AnalyticsSection />
+      </Suspense>
+    </div>
+  )
+}
+
+async function AnalyticsSection() {
   const stats = await getAnalytics()
 
   const hasRevenue = stats.trend.some((point) => point.revenue > 0)
@@ -45,13 +70,6 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-primary">Analytics</h1>
-        <p className="text-muted-foreground">
-          Live numbers from reservations — revenue counts confirmed bookings only.
-        </p>
-      </header>
-
       <div className="stat-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={CircleDollarSign}
@@ -126,6 +144,16 @@ export default async function AdminAnalyticsPage() {
           </p>
         ) : null}
       </section>
+    </div>
+  )
+}
+
+function AnalyticsFallback() {
+  return (
+    <div className="flex flex-col gap-8">
+      <StatGridSkeleton count={3} className="sm:grid-cols-2 lg:grid-cols-3" />
+      <CardSkeleton rows={4} />
+      <TableSkeleton rows={3} cells={4} />
     </div>
   )
 }

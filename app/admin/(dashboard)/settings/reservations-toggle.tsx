@@ -2,6 +2,7 @@
 
 import { useTransition } from "react"
 import { LoaderCircleIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { cn } from "cn"
 import { setReservationsPaused } from "./actions"
@@ -10,10 +11,28 @@ import { setReservationsPaused } from "./actions"
  * The switch in the Settings "Reservations" panel. A plain button with
  * role="switch" — no switch component in the ui kit, and this is two
  * elements of Tailwind. Fires the server action on toggle; the page re-reads
- * the flag from the database, so the label next to it stays accurate.
+ * the flag from the database, so the label next to it stays accurate, and the
+ * toast confirms which way it went.
  */
 export function ReservationsToggle({ paused }: { paused: boolean }) {
   const [pending, startTransition] = useTransition()
+
+  function toggle() {
+    startTransition(async () => {
+      try {
+        const { ok } = await setReservationsPaused(!paused)
+        toast[ok ? "success" : "error"](
+          ok
+            ? !paused
+              ? "Reservations are paused — the form now shows the pause notice."
+              : "Reservations are open again."
+            : "That didn't go through. Please try again."
+        )
+      } catch {
+        toast.error("That didn't go through. Please try again.")
+      }
+    })
+  }
 
   return (
     <button
@@ -22,9 +41,7 @@ export function ReservationsToggle({ paused }: { paused: boolean }) {
       aria-checked={paused}
       aria-label="Pause new reservations"
       disabled={pending}
-      onClick={() =>
-        startTransition(async () => setReservationsPaused(!paused))
-      }
+      onClick={toggle}
       className={cn(
         "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-150 ease-[var(--ease-out)]",
         paused ? "bg-destructive" : "bg-secondary",

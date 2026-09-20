@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { LoaderCircleIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,12 +38,17 @@ export default function CancelButton({
       return
     }
     startTransition(async () => {
-      const res = await cancelReservationAction(reference)
-      if (res.ok) {
-        router.refresh()
-        return
+      try {
+        const res = await cancelReservationAction(reference)
+        if (res.ok) {
+          toast.success("Reservation canceled.")
+          router.refresh()
+          return
+        }
+        toast.error(res.error ?? "Failed to cancel reservation.")
+      } catch {
+        toast.error("Failed to cancel reservation.")
       }
-      setError(res.error ?? "Failed to cancel reservation.")
     })
   }
 

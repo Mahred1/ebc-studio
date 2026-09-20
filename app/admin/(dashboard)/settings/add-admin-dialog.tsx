@@ -8,6 +8,7 @@ import {
   RefreshCwIcon,
   UserPlusIcon,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -100,6 +101,16 @@ export function AddAdminDialog() {
   const [pending, startTransition] = React.useTransition()
 
   const created = state.created
+
+  // The credentials screen already fills the dialog; the toast is the copy
+  // that travels past it. The password never leaves that screen.
+  React.useEffect(() => {
+    if (created) toast.success(`${created.username} can now sign in.`)
+  }, [created])
+
+  React.useEffect(() => {
+    if (state.error) toast.error(state.error)
+  }, [state.error])
 
   function open() {
     setUsername("")

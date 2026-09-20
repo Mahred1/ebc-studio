@@ -1,13 +1,15 @@
 "use client"
 
+import { useTransition } from "react"
 import { Trash2Icon } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { deleteAdmin } from "./actions"
 
 /**
- * Client-side only for the confirm() — the delete itself is a plain form post
- * to a server action, which re-checks that the caller is the primary admin.
+ * Client-side only for the confirm() — the delete waits for the action's
+ * answer so the toast reflects whether it actually removed someone.
  */
 export function DeleteAdminButton({
   id,
@@ -16,26 +18,39 @@ export function DeleteAdminButton({
   id: number
   username: string
 }) {
+  const [pending, startTransition] = useTransition()
+
+  function deleteIt() {
+    const formData = new FormData()
+    formData.set("id", String(id))
+    startTransition(async () => {
+      try {
+        const { ok } = await deleteAdmin(formData)
+        if (ok) toast.success(`Deleted ${username}.`)
+        else toast.info(`${username} was already removed.`)
+      } catch {
+        toast.error("That didn't go through. Please try again.")
+      }
+    })
+  }
+
   return (
-    <form
-      action={deleteAdmin}
-      onSubmit={(event) => {
+    <Button
+      type="button"
+      variant="destructive"
+      size="sm"
+      disabled={pending}
+      aria-label={`Delete ${username}`}
+      onClick={() => {
         const ok = confirm(
           `Delete "${username}"? They lose access on their next request and the account can't be restored.`
         )
-        if (!ok) event.preventDefault()
+        if (!ok) return
+        deleteIt()
       }}
     >
-      <input type="hidden" name="id" value={id} />
-      <Button
-        type="submit"
-        variant="destructive"
-        size="sm"
-        aria-label={`Delete ${username}`}
-      >
-        <Trash2Icon />
-        Delete
-      </Button>
-    </form>
+      <Trash2Icon />
+      {pending ? "Deleting…" : "Delete"}
+    </Button>
   )
 }

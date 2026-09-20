@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { CircleCheckIcon, LoaderCircleIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { ReservationDetails } from "@/components/reservation-details"
 import { Button } from "@/components/ui/button"
@@ -117,6 +118,7 @@ export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
       const result = await createReservation(draft)
 
       if (result.ok) {
+        toast.success("Spot reserved — check your email for your reference.")
         setSubmitted(result.reservation)
         return
       }
@@ -125,12 +127,14 @@ export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
       // form thought was clean. Show whatever it sends back.
       setErrors(result.errors)
       setFormError(result.message)
+      if (result.message) toast.error(result.message)
 
       const firstRejected = RESERVATION_FIELDS.find((f) => result.errors[f])
       if (firstRejected) fieldRefs.current[firstRejected]?.focus()
     } catch {
       // The action never made it there and back (offline, server down).
       setFormError("Something went wrong. Check your connection and try again.")
+      toast.error("Something went wrong. Check your connection and try again.")
     } finally {
       setPending(false)
     }

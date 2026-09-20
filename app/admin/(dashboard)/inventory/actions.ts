@@ -82,18 +82,19 @@ export async function updateChannel(
  */
 export async function toggleChannelHidden(
   formData: FormData
-): Promise<void> {
+): Promise<{ ok: boolean }> {
   await requireAdmin()
 
   const id = Number(formData.get("id"))
   const hidden = formData.get("hidden") === "true"
-  if (!Number.isSafeInteger(id)) return
+  if (!Number.isSafeInteger(id)) return { ok: false }
 
-  await prisma.channelInventory.updateMany({
+  const { count } = await prisma.channelInventory.updateMany({
     where: { id },
     data: { hidden: !hidden },
   })
-  revalidatePath(INVENTORY_PATH)
+  if (count > 0) revalidatePath(INVENTORY_PATH)
+  return { ok: count > 0 }
 }
 
 /**
@@ -102,12 +103,13 @@ export async function toggleChannelHidden(
  * admin list) for good. Deleting is the hard path — hiding is the reversible
  * alternative, which is what the UI nudges toward.
  */
-export async function deleteChannel(formData: FormData): Promise<void> {
+export async function deleteChannel(formData: FormData): Promise<{ ok: boolean }> {
   await requireAdmin()
 
   const id = Number(formData.get("id"))
-  if (!Number.isSafeInteger(id)) return
+  if (!Number.isSafeInteger(id)) return { ok: false }
 
-  await prisma.channelInventory.deleteMany({ where: { id } })
-  revalidatePath(INVENTORY_PATH)
+  const { count } = await prisma.channelInventory.deleteMany({ where: { id } })
+  if (count > 0) revalidatePath(INVENTORY_PATH)
+  return { ok: count > 0 }
 }

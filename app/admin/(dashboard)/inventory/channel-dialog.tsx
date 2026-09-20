@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { LoaderCircleIcon, PackagePlusIcon, PencilIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,6 +27,7 @@ function ChannelFormDialog({
   name,
   dialogRef,
   action,
+  successMessage,
 }: {
   title: string
   description: string
@@ -33,6 +35,7 @@ function ChannelFormDialog({
   name: string
   dialogRef: React.RefObject<HTMLDialogElement | null>
   action: (formData: FormData) => Promise<ChannelActionState>
+  successMessage: string
 }) {
   const id = React.useId()
   const [value, setValue] = React.useState(name)
@@ -41,24 +44,35 @@ function ChannelFormDialog({
   const [pending, startTransition] = React.useTransition()
 
   // The parent re-opens with the current name in hand; keep this input in sync
-  // so a channel renamed elsewhere doesn't leave stale text behind.
-  React.useEffect(() => setValue(name), [name])
+  // so a channel renamed elsewhere doesn't leave stale text behind. Adjusted
+  // during render, the React-documented replacement for the setState-in-effect
+  // pattern — the state only needs to track the prop, not reset off an effect.
+  const [prevName, setPrevName] = React.useState(name)
+  if (prevName !== name) {
+    setPrevName(name)
+    setValue(name)
+  }
 
   // Closes after a successful save. This runs as an effect — after React has
   // committed the re-render triggered by the action's revalidatePath() — so
   // the close can't be lost in the race between the action resolving and the
-  // page refresh landing.
+  // page refresh landing. The toast lands here too, once per resolved action.
+  // The reset is deferred purely to keep the synchronous setState out of the
+  // effect body.
   React.useEffect(() => {
     if (!succeeded) return
+    toast.success(successMessage)
     dialogRef.current?.close()
-    setSucceeded(false)
-  }, [succeeded, dialogRef])
+    const reset = setTimeout(() => setSucceeded(false), 0)
+    return () => clearTimeout(reset)
+  }, [succeeded, dialogRef, successMessage])
 
   function submit(formData: FormData) {
     startTransition(async () => {
       const result = await action(formData)
       setState(result)
       if (result.error === undefined) setSucceeded(true)
+      else if (result.error) toast.error(result.error)
     })
   }
 
@@ -133,6 +147,7 @@ export function AddChannelDialog() {
         name=""
         dialogRef={dialogRef}
         action={createChannel}
+        successMessage="Channel added — it's live on the reserve form."
       />
     </>
   )
@@ -170,6 +185,7 @@ export function EditChannelDialog({
           formData.append("id", String(id))
           return updateChannel(formData)
         }}
+        successMessage="Channel updated."
       />
     </>
   )

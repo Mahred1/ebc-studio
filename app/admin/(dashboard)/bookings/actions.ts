@@ -70,35 +70,36 @@ async function setBookingStatus(
   to: ReservationStatus,
   notify: ReservationEmailKind | null,
   reopenAs?: ReservationStatus
-) {
+): Promise<{ ok: boolean }> {
   await requireAdmin()
 
   const code = parseReference(reference)
   const transition = TRANSITIONS[to]
-  if (!code || transition.from.length === 0) return
+  if (!code || transition.from.length === 0) return { ok: false }
 
   const { count } = await prisma.studioReservation.updateMany({
     where: { code, status: { in: transition.from } },
     data: { status: to, ...(reopenAs ? { reopenStatus: reopenAs } : {}) },
   })
-  if (count === 0) return
+  if (count === 0) return { ok: false }
   revalidatePath(BOOKINGS_PATH)
   if (notify) await notifyBooker(code, notify)
+  return { ok: true }
 }
 
 export async function acceptBooking(reference: string) {
-  await setBookingStatus(reference, "confirmed", "accepted")
+  return setBookingStatus(reference, "confirmed", "accepted")
 }
 
 export async function rejectBooking(reference: string) {
-  await setBookingStatus(reference, "declined", "rejected")
+  return setBookingStatus(reference, "declined", "rejected")
 }
 
 export async function cancelBooking(reference: string) {
   // Admin cancels only ever run from confirmed, so remember that — reinstate
   // restores it exactly. `canceledByUser` stays false, so a user-canceled row
   // keeps its own public reinstate path and an admin-canceled one gets none.
-  await setBookingStatus(reference, "canceled", "canceled-by-admin", "confirmed")
+  return setBookingStatus(reference, "canceled", "canceled-by-admin", "confirmed")
 }
 
 /**
@@ -111,13 +112,13 @@ export async function reinstateBooking(reference: string) {
   await requireAdmin()
 
   const code = parseReference(reference)
-  if (!code) return
+  if (!code) return { ok: false }
 
   const existing = await prisma.studioReservation.findUnique({
     where: { code },
     select: { status: true, reopenStatus: true },
   })
-  if (!existing || existing.status !== "canceled") return
+  if (!existing || existing.status !== "canceled") return { ok: false }
 
   const { count } = await prisma.studioReservation.updateMany({
     where: { code, status: "canceled" },
@@ -128,6 +129,7 @@ export async function reinstateBooking(reference: string) {
     },
   })
   if (count > 0) revalidatePath(BOOKINGS_PATH)
+  return { ok: count > 0 }
 }
 
 /**
@@ -139,7 +141,7 @@ export async function archiveBooking(reference: string) {
   await requireAdmin()
 
   const code = parseReference(reference)
-  if (!code) return
+  if (!code) return { ok: false }
 
   const { count } = await prisma.studioReservation.updateMany({
     where: { code, archived: false },
@@ -149,6 +151,7 @@ export async function archiveBooking(reference: string) {
     revalidatePath(BOOKINGS_PATH)
     await notifyBooker(code, "archived-by-admin")
   }
+  return { ok: count > 0 }
 }
 
 /** Returns an archived reservation to the active list. */
@@ -156,11 +159,12 @@ export async function unarchiveBooking(reference: string) {
   await requireAdmin()
 
   const code = parseReference(reference)
-  if (!code) return
+  if (!code) return { ok: false }
 
   const { count } = await prisma.studioReservation.updateMany({
     where: { code, archived: true },
     data: { archived: false, archivedAt: null },
   })
   if (count > 0) revalidatePath(BOOKINGS_PATH)
+  return { ok: count > 0 }
 }

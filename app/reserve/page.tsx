@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { PauseCircleIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { InlineLoader } from "@/components/suspense-ui";
 import { getVisibleChannelOptions } from "@/lib/channels";
 import { getSiteSettings } from "@/lib/site-settings";
 import { ReservationForm } from "./reservation-form";
@@ -19,10 +21,9 @@ export const metadata: Metadata = {
 // pause state and the old channel list.
 export const dynamic = "force-dynamic";
 
+/** The header is on screen immediately; the form area streams in from one
+ *  site-settings + channel-inventory read so it never holds the page back. */
 export default async function ReservePage() {
-  const { reservationsPaused } = await getSiteSettings();
-  const channels = await getVisibleChannelOptions();
-
   return (
     <main className="flex min-h-dvh w-full justify-center px-4 py-10 sm:py-16">
       <div className="flex w-full max-w-lg flex-col gap-8">
@@ -44,16 +45,23 @@ export default async function ReservePage() {
           </p>
         </header>
 
-        {reservationsPaused ? (
-          <ReservationsPaused />
-        ) : channels.length === 0 ? (
-          <NoChannels />
-        ) : (
-          <ReservationForm channels={channels} />
-        )}
+        <Suspense
+          fallback={<InlineLoader label="Preparing the reserve form…" />}
+        >
+          <ReserveArea />
+        </Suspense>
       </div>
     </main>
   );
+}
+
+async function ReserveArea() {
+  const { reservationsPaused } = await getSiteSettings();
+  const channels = await getVisibleChannelOptions();
+
+  if (reservationsPaused) return <ReservationsPaused />;
+  if (channels.length === 0) return <NoChannels />;
+  return <ReservationForm channels={channels} />;
 }
 
 /** Every channel is hidden or was deleted — the form has nothing to offer. */

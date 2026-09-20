@@ -2,6 +2,7 @@
 
 import { useTransition } from "react"
 import { RotateCcwIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import type { ReservationStatus } from "@/lib/reservation"
@@ -13,6 +14,19 @@ import {
   reinstateBooking,
   unarchiveBooking,
 } from "./actions"
+
+/** The copy each action answers with, keyed the same way the buttons branch. */
+const MESSAGES: Record<
+  "accept" | "reject" | "cancel" | "reinstate" | "archive" | "unarchive",
+  { done: string; noop: string }
+> = {
+  accept: { done: "Reservation accepted — the booker has been emailed.", noop: "Nothing to accept — the reservation already changed." },
+  reject: { done: "Reservation rejected — the booker has been emailed.", noop: "Nothing to reject — the reservation already changed." },
+  cancel: { done: "Reservation canceled — the booker has been emailed.", noop: "Nothing to cancel — the reservation already changed." },
+  reinstate: { done: "Reservation reinstated.", noop: "Nothing to reinstate — the reservation already changed." },
+  archive: { done: "Reservation archived.", noop: "Nothing to archive — it already is." },
+  unarchive: { done: "Reservation restored to the list.", noop: "Nothing to restore — it already is." },
+}
 
 /**
  * The per-row action buttons. Which actions appear follows the lifecycle —
@@ -32,10 +46,18 @@ export function BookingActions({
   archived: boolean
 }) {
   const [pending, startTransition] = useTransition()
-  const run = (action: (reference: string) => Promise<void>) => () =>
-    startTransition(async () => {
-      await action(reference)
-    })
+
+  const run =
+    (action: (reference: string) => Promise<{ ok: boolean }>, label: keyof typeof MESSAGES) =>
+    () =>
+      startTransition(async () => {
+        try {
+          const { ok } = await action(reference)
+          toast[ok ? "success" : "info"](ok ? MESSAGES[label].done : MESSAGES[label].noop)
+        } catch {
+          toast.error("That didn't go through. Please try again.")
+        }
+      })
 
   return (
     <div className="flex items-center justify-end gap-2">
@@ -45,7 +67,7 @@ export function BookingActions({
             size="sm"
             variant="success"
             disabled={pending}
-            onClick={run(acceptBooking)}
+            onClick={run(acceptBooking, "accept")}
           >
             Accept
           </Button>
@@ -53,7 +75,7 @@ export function BookingActions({
             size="sm"
             variant="destructive"
             disabled={pending}
-            onClick={run(rejectBooking)}
+            onClick={run(rejectBooking, "reject")}
           >
             Reject
           </Button>
@@ -63,7 +85,7 @@ export function BookingActions({
           size="sm"
           variant="outline"
           disabled={pending}
-          onClick={run(cancelBooking)}
+          onClick={run(cancelBooking, "cancel")}
         >
           Cancel
         </Button>
@@ -72,7 +94,7 @@ export function BookingActions({
           size="sm"
           variant="outline"
           disabled={pending}
-          onClick={run(reinstateBooking)}
+          onClick={run(reinstateBooking, "reinstate")}
         >
           <RotateCcwIcon />
           Reinstate
@@ -83,7 +105,7 @@ export function BookingActions({
           size="sm"
           variant="outline"
           disabled={pending}
-          onClick={run(archived ? unarchiveBooking : archiveBooking)}
+          onClick={run(archived ? unarchiveBooking : archiveBooking, archived ? "unarchive" : "archive")}
         >
           {archived ? "Unarchive" : "Archive"}
         </Button>

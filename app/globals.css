@@ -307,6 +307,18 @@ dialog[open]::backdrop {
   opacity: 1;
 }
 
+/* --- Toasts -----------------------------------------------------------
+   Sonner skin: neutral toasts borrow the card surfaces so they sit inside
+   the same token system; success/error keep Sonner's rich (green/red)
+   colors — the action itself is left to say what it did. */
+[data-sonner-toaster] {
+  --normal-bg: var(--card);
+  --normal-border: var(--border);
+  --normal-text: var(--foreground);
+  --normal-muted: var(--muted-foreground);
+  font-family: var(--font-sans);
+}
+
 /* --- Reduced motion ----------------------------------------------------
    Keep the state changes, drop the motion. Durations go near-zero so fades,
    scale, height collapse and dialog slides all resolve instantly while the

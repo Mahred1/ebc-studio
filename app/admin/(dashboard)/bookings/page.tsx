@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { cn } from "cn"
@@ -5,6 +6,7 @@ import { cn } from "cn"
 import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import { formatReservationDate } from "@/components/reservation-details"
 import { StatCard } from "@/components/stat-card"
+import { StatGridSkeleton, TableSkeleton } from "@/components/suspense-ui"
 import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth"
 import {
@@ -69,6 +71,11 @@ function bookingsHref(
   return `/admin/bookings${qs ? `?${qs}` : ""}`
 }
 
+/**
+ * The heading renders immediately; the counts, filters and table all hang off
+ * the getBookings read, so they stream in behind a skeleton instead of holding
+ * the page warm.
+ */
 export default async function AdminBookingsPage({
   searchParams,
 }: {
@@ -84,6 +91,29 @@ export default async function AdminBookingsPage({
   }
   const page = Math.max(1, Number.parseInt(String(s.page ?? "1"), 10) || 1)
 
+  return (
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold text-primary">Bookings</h1>
+        <p className="text-muted-foreground">
+          Review, accept, reject, cancel — and archive a booking.
+        </p>
+      </header>
+
+      <Suspense fallback={<BookingsFallback />}>
+        <BookingsSection state={state} page={page} />
+      </Suspense>
+    </div>
+  )
+}
+
+async function BookingsSection({
+  state,
+  page,
+}: {
+  state: { status: AdminStatusFilter | ""; channel: string; period: BookingPeriod }
+  page: number
+}) {
   const data = await getBookings({
     status: state.status || undefined,
     channel: state.channel || undefined,
@@ -97,13 +127,6 @@ export default async function AdminBookingsPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-primary">Bookings</h1>
-        <p className="text-muted-foreground">
-          Review, accept, reject, cancel — and archive a booking.
-        </p>
-      </header>
-
       <div className="stat-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           icon={ListChecks}
@@ -242,6 +265,15 @@ export default async function AdminBookingsPage({
           </div>
         </nav>
       </div>
+    </div>
+  )
+}
+
+function BookingsFallback() {
+  return (
+    <div className="flex flex-col gap-8">
+      <StatGridSkeleton count={5} className="sm:grid-cols-2 lg:grid-cols-5" />
+      <TableSkeleton rows={6} />
     </div>
   )
 }
