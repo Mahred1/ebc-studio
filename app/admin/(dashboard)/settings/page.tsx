@@ -52,11 +52,13 @@ async function SettingsSection({
 }: {
   viewer: { id: number; isPrimary: boolean }
 }) {
-  const { reservationsPaused } = await getSiteSettings()
-  const admins = await prisma.admin.findMany({
-    select: { id: true, username: true, isPrimary: true, createdAt: true },
-    orderBy: { id: "asc" },
-  })
+  const [{ reservationsPaused }, admins] = await Promise.all([
+    getSiteSettings(),
+    prisma.admin.findMany({
+      select: { id: true, username: true, isPrimary: true, createdAt: true },
+      orderBy: { id: "asc" },
+    }),
+  ])
 
   return (
     <div className="flex flex-col gap-8">

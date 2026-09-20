@@ -2,6 +2,7 @@
 // row in the Admin table, and gates pages. Imports Prisma and next/headers, so
 // it is server-only — middleware uses lib/session.ts instead.
 
+import { cache } from "react"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
@@ -46,10 +47,12 @@ export async function endSession() {
 }
 
 /**
- * The signed-in admin, or null. The row is re-read on every call rather than
- * trusted from the cookie, so deleting an account revokes access immediately.
+ * The signed-in admin, or null. The row is re-read on every request rather than
+ * trusted from the cookie, so deleting an account revokes access immediately —
+ * but React cache() dedupes repeat calls within that single request, so the
+ * admin layout and the page both awaiting requireAdmin share one DB read.
  */
-export async function getAdmin(): Promise<Admin | null> {
+export const getAdmin: () => Promise<Admin | null> = cache(async () => {
   const store = await cookies()
   const adminId = await verifySession(store.get(SESSION_COOKIE)?.value)
   if (adminId === null) return null
@@ -58,7 +61,7 @@ export async function getAdmin(): Promise<Admin | null> {
     where: { id: adminId },
     select: { id: true, username: true, isPrimary: true },
   })
-}
+})
 
 /**
  * The gate for everything under /admin. Middleware already redirects

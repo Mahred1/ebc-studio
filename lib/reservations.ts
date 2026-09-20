@@ -9,6 +9,7 @@
 // The one mutation, createReservation, lives in `app/reserve/actions.ts`
 // because a client component has to call it.
 
+import { cache } from "react"
 import { randomBytes } from "node:crypto"
 
 import { Prisma } from "@prisma/client"
@@ -219,10 +220,12 @@ export async function reinstateReservation(
   return toView(row)
 }
 
-/** One reservation by its public reference. Null when nothing matches. */
-export async function getReservation(
+/** One reservation by its public reference. Null when nothing matches. The
+ *  React cache() dedupe lasts one render only — a check always sees the
+ *  latest status, never a stale snapshot. */
+export const getReservation: (
   reference: string
-): Promise<ReservationView | null> {
+) => Promise<ReservationView | null> = cache(async (reference) => {
   const code = parseReference(reference)
   // Not a well-formed reference — no row could match, so skip the round trip.
   if (code === null) return null
@@ -233,16 +236,16 @@ export async function getReservation(
   })
 
   return row ? toView(row) : null
-}
+})
 
 /**
  * Every reservation booked with an email, newest first. Archived rows are
  * dropped — they disappear from email lookups, but a reservation stays
  * reachable by code (getReservation), which shows an archived-by-admin notice.
  */
-export async function getReservationsByEmail(
+export const getReservationsByEmail: (
   email: string
-): Promise<ReservationView[]> {
+) => Promise<ReservationView[]> = cache(async (email) => {
   const normalized = normalizeEmail(email)
   if (!normalized) return []
 
@@ -254,7 +257,7 @@ export async function getReservationsByEmail(
   })
 
   return rows.map(toView)
-}
+})
 
 /* ----------------------------------------------------------------- customers */
 
@@ -263,7 +266,7 @@ export async function getReservationsByEmail(
  * Fetches the reservations newest-first and lets aggregateCustomers() (the pure
  * roll-up in lib/reservation.ts) do the rest.
  */
-export async function getCustomers(): Promise<CustomerView[]> {
+export const getCustomers: () => Promise<CustomerView[]> = cache(async () => {
   const rows = await prisma.studioReservation.findMany({
     select: {
       email: true,
@@ -286,7 +289,7 @@ export async function getCustomers(): Promise<CustomerView[]> {
       createdAt: row.createdAt.toISOString(),
     }))
   )
-}
+})
 
 /* ----------------------------------------------------------------- analytics */
 
@@ -334,7 +337,7 @@ function gcd(a: number, b: number): number {
  * status. All rolled up in JS: at studio scale the whole table is a few dozen
  * rows, so one lean scan beats several grouped Prisma queries.
  */
-export async function getAnalytics(): Promise<AnalyticsData> {
+export const getAnalytics: () => Promise<AnalyticsData> = cache(async () => {
   const rows = await prisma.studioReservation.findMany({
     select: {
       code: true,
@@ -425,7 +428,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     trend: [...trend.values()],
     recent: recent.slice(0, 3),
   }
-}
+})
 
 /* ------------------------------------------------------------------ overview */
 
@@ -463,7 +466,7 @@ function dayKey(date: Date): string {
  * channels with an open or confirmed reservation), and the upcoming list — pending
  * and confirmed reservations newest-first, declined dropped.
  */
-export async function getOverview(): Promise<OverviewData> {
+export const getOverview: () => Promise<OverviewData> = cache(async () => {
   const [rows, totalChannels] = await Promise.all([
     prisma.studioReservation.findMany({
       select: {
@@ -529,7 +532,7 @@ export async function getOverview(): Promise<OverviewData> {
     declined,
     sessions,
   }
-}
+})
 
 /* ------------------------------------------------------------------ bookings */
 
@@ -593,77 +596,79 @@ function periodStart(period: BookingPeriod): Date | null {
  * filter that matches nothing renders an empty table, not a broken page — at
  * studio scale this is a handful of grouped queries, cheaper than loading rows.
  */
-export async function getBookings(params: BookingsParams): Promise<BookingsData> {
-  const where: Prisma.StudioReservationWhereInput = {}
-  if (params.status === "archived") where.archived = true
-  else if (params.status) where.status = params.status
-  if (params.channel) where.channel = params.channel
-  const since = periodStart(params.period ?? "all")
-  if (since) where.createdAt = { gte: since }
+export const getBookings: (params: BookingsParams) => Promise<BookingsData> = cache(
+  async (params) => {
+    const where: Prisma.StudioReservationWhereInput = {}
+    if (params.status === "archived") where.archived = true
+    else if (params.status) where.status = params.status
+    if (params.channel) where.channel = params.channel
+    const since = periodStart(params.period ?? "all")
+    if (since) where.createdAt = { gte: since }
 
-  // Total must land before the page can be clamped — an out-of-range ?page=
-  // would otherwise skip past everything and render an empty page.
-  const [byStatus, total, channels] = await Promise.all([
-    prisma.studioReservation.groupBy({
-      by: ["status"],
-      _count: { _all: true },
-    }),
-    prisma.studioReservation.count({ where }),
-    prisma.studioReservation.groupBy({ by: ["channel"] }),
-  ])
-  const pages = Math.max(1, Math.ceil(total / BOOKINGS_PER_PAGE))
-  const page = Math.min(Math.max(params.page, 1), pages)
+    // Total must land before the page can be clamped — an out-of-range ?page=
+    // would otherwise skip past everything and render an empty page.
+    const [byStatus, total, channels] = await Promise.all([
+      prisma.studioReservation.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+      prisma.studioReservation.count({ where }),
+      prisma.studioReservation.groupBy({ by: ["channel"] }),
+    ])
+    const pages = Math.max(1, Math.ceil(total / BOOKINGS_PER_PAGE))
+    const page = Math.min(Math.max(params.page, 1), pages)
 
-  const rows = await prisma.studioReservation.findMany({
-    where,
-    select: {
-      code: true,
-      status: true,
-      fullName: true,
-      channel: true,
-      bid: true,
-      createdAt: true,
-      archived: true,
-    },
-    // Archived rows sink to the end; everything else stays newest-first.
-    orderBy: [{ archived: "asc" }, { createdAt: "desc" }, { id: "desc" }],
-    skip: (page - 1) * BOOKINGS_PER_PAGE,
-    take: BOOKINGS_PER_PAGE,
-  })
+    const rows = await prisma.studioReservation.findMany({
+      where,
+      select: {
+        code: true,
+        status: true,
+        fullName: true,
+        channel: true,
+        bid: true,
+        createdAt: true,
+        archived: true,
+      },
+      // Archived rows sink to the end; everything else stays newest-first.
+      orderBy: [{ archived: "asc" }, { createdAt: "desc" }, { id: "desc" }],
+      skip: (page - 1) * BOOKINGS_PER_PAGE,
+      take: BOOKINGS_PER_PAGE,
+    })
 
-  const counts = {
-    total: 0,
-    confirmed: 0,
-    pending: 0,
-    declined: 0,
-    canceled: 0,
+    const counts = {
+      total: 0,
+      confirmed: 0,
+      pending: 0,
+      declined: 0,
+      canceled: 0,
+    }
+    for (const group of byStatus) {
+      counts[group.status] = group._count._all
+      counts.total += group._count._all
+    }
+
+    const decided = counts.confirmed + counts.declined + counts.canceled
+    const acceptanceRate =
+      decided === 0
+        ? null
+        : `${Math.round((counts.confirmed / decided) * 100)}%`
+
+    return {
+      rows: rows.map((row) => ({
+        reference: row.code,
+        status: row.status,
+        fullName: row.fullName,
+        channel: row.channel,
+        bid: row.bid.toFixed(2),
+        createdAt: row.createdAt.toISOString(),
+        archived: row.archived,
+      })),
+      total,
+      page,
+      pages,
+      counts,
+      channels: channels.map((c) => c.channel).sort(),
+      acceptanceRate,
+    }
   }
-  for (const group of byStatus) {
-    counts[group.status] = group._count._all
-    counts.total += group._count._all
-  }
-
-  const decided = counts.confirmed + counts.declined + counts.canceled
-  const acceptanceRate =
-    decided === 0
-      ? null
-      : `${Math.round((counts.confirmed / decided) * 100)}%`
-
-  return {
-    rows: rows.map((row) => ({
-      reference: row.code,
-      status: row.status,
-      fullName: row.fullName,
-      channel: row.channel,
-      bid: row.bid.toFixed(2),
-      createdAt: row.createdAt.toISOString(),
-      archived: row.archived,
-    })),
-    total,
-    page,
-    pages,
-    counts,
-    channels: channels.map((c) => c.channel).sort(),
-    acceptanceRate,
-  }
-}
+)

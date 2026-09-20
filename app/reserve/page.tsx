@@ -56,8 +56,10 @@ export default async function ReservePage() {
 }
 
 async function ReserveArea() {
-  const { reservationsPaused } = await getSiteSettings();
-  const channels = await getVisibleChannelOptions();
+  const [{ reservationsPaused }, channels] = await Promise.all([
+    getSiteSettings(),
+    getVisibleChannelOptions(),
+  ]);
 
   if (reservationsPaused) return <ReservationsPaused />;
   if (channels.length === 0) return <NoChannels />;
