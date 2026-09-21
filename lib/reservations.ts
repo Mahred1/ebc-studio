@@ -26,6 +26,7 @@ import {
   type BookingPeriod,
   type ReservationDraft,
   type ReservationStatus,
+  type ReservationType,
   type ReservationView,
 } from "@/lib/reservation"
 import type { CustomerView } from "@/lib/reservation"
@@ -41,6 +42,9 @@ const SELECT = {
   goal: true,
   location: true,
   bid: true,
+  reservationType: true,
+  recordingDate: true,
+  broadcastDate: true,
   createdAt: true,
   canceledByUser: true,
   reopenStatus: true,
@@ -70,6 +74,13 @@ function toView(row: Row): ReservationView {
     goal: row.goal,
     location: row.location,
     bid: row.bid.toFixed(2),
+    // The DATE columns come back as midnight-UTC Date objects; keeping the
+    // "YYYY-MM-DD" slice means the day never shifts under a timezone.
+    reservationType: row.reservationType,
+    recordingDate: row.recordingDate
+      ? row.recordingDate.toISOString().slice(0, 10)
+      : null,
+    broadcastDate: row.broadcastDate.toISOString().slice(0, 10),
     createdAt: row.createdAt.toISOString(),
     // A booker can reinstate only a cancellation they made themselves, and only
     // when there's a stored status to restore. Never for admin-canceled rows.
@@ -119,6 +130,15 @@ export async function insertReservation(
     channel: draft.channel.trim(),
     goal: draft.goal.trim(),
     location: draft.location.trim(),
+    // Both days arrive as "YYYY-MM-DD" from the form; the UTC-midnight Date
+    // stores exactly that day in the DATE column. recordingDate is null for
+    // live events — the field isn't even shown, so it can never be filled.
+    reservationType: draft.reservationType as ReservationType,
+    recordingDate:
+      draft.reservationType === "recording"
+        ? new Date(`${draft.recordingDate}T00:00:00Z`)
+        : null,
+    broadcastDate: new Date(`${draft.broadcastDate}T00:00:00Z`),
     // Prisma parses the string into the Decimal(12,2) column, so the amount
     // never passes through a float.
     bid: draft.bid.trim(),
@@ -435,9 +455,10 @@ export const getAnalytics: () => Promise<AnalyticsData> = cache(async () => {
 export type OverviewSession = {
   reference: string
   channel: string
+  reservationType: ReservationType
   fullName: string
-  /** created ISO — reservations have no scheduled slot, so this stands in for the date. */
-  bookedAt: string
+  /** The day it airs, "YYYY-MM-DD". */
+  broadcastDate: string
   status: ReservationStatus
 }
 
@@ -473,8 +494,10 @@ export const getOverview: () => Promise<OverviewData> = cache(async () => {
         code: true,
         status: true,
         channel: true,
+        reservationType: true,
         fullName: true,
         bid: true,
+        broadcastDate: true,
         createdAt: true,
       },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -516,8 +539,9 @@ export const getOverview: () => Promise<OverviewData> = cache(async () => {
     sessions.push({
       reference: row.code,
       channel: row.channel,
+      reservationType: row.reservationType,
       fullName: row.fullName,
-      bookedAt: row.createdAt.toISOString(),
+      broadcastDate: row.broadcastDate.toISOString().slice(0, 10),
       status: row.status,
     })
   }
@@ -543,6 +567,9 @@ export type BookingRow = {
   status: ReservationStatus
   fullName: string
   channel: string
+  reservationType: ReservationType
+  /** The day it airs, "YYYY-MM-DD" — the scheduling-relevant date. */
+  broadcastDate: string
   bid: string
   createdAt: string
   archived: boolean
@@ -625,6 +652,8 @@ export const getBookings: (params: BookingsParams) => Promise<BookingsData> = ca
         status: true,
         fullName: true,
         channel: true,
+        reservationType: true,
+        broadcastDate: true,
         bid: true,
         createdAt: true,
         archived: true,
@@ -659,6 +688,8 @@ export const getBookings: (params: BookingsParams) => Promise<BookingsData> = ca
         status: row.status,
         fullName: row.fullName,
         channel: row.channel,
+        reservationType: row.reservationType,
+        broadcastDate: row.broadcastDate.toISOString().slice(0, 10),
         bid: row.bid.toFixed(2),
         createdAt: row.createdAt.toISOString(),
         archived: row.archived,

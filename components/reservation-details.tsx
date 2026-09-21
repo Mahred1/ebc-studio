@@ -1,7 +1,6 @@
 import { LockKeyholeIcon } from "lucide-react"
 
-import CancelButton from "@/app/check-reservation/CancelButton"
-import ReinstateButton from "@/app/check-reservation/ReinstateButton"
+import { ReservationActions } from "@/components/reservation-actions"
 import { CopyCodeButton } from "@/components/copy-code-button"
 import { ReservationStatusBadge } from "@/components/reservation-status-badge"
 import {
@@ -9,6 +8,7 @@ import {
   RESERVATION_STATUSES,
   formatPhone,
   maskReference,
+  reservationTypeLabel,
   type ReservationView,
 } from "@/lib/reservation"
 
@@ -16,6 +16,22 @@ export function formatReservationDate(iso: string) {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return "—"
   return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })
+}
+
+/**
+ * Formats a day kept as "YYYY-MM-DD" (recording/broadcast DATE columns).
+ * Rendered in UTC so the day can never shift under a timezone — these are
+ * calendar days, not instants.
+ */
+export function formatReservationDay(day: string) {
+  const date = new Date(`${day}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return "—"
+  return date.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -33,6 +49,14 @@ export function ReservationRows({
     ["Email", reservation.email],
     ["Phone", reservation.phone ? formatPhone(reservation.phone) : "—"],
     ["Channel", reservation.channel],
+    ["Type", reservationTypeLabel(reservation.reservationType)],
+    [
+      "Recording",
+      reservation.recordingDate
+        ? formatReservationDay(reservation.recordingDate)
+        : "—",
+    ],
+    ["Broadcast", formatReservationDay(reservation.broadcastDate)],
     ["Location", reservation.location],
     ["Bid", `${CURRENCY.symbol}${reservation.bid} ${CURRENCY.code}`],
     ["Submitted", formatReservationDate(reservation.createdAt)],
@@ -89,17 +113,8 @@ export function ReservationDetails({
 
       <ReservationRows reservation={reservation} />
 
-      <CancelButton
-        reference={reservation.reference}
-        status={reservation.status}
-        verifyReference={secure}
-      />
-
-      <ReinstateButton
-        reference={reservation.reference}
-        reopenable={reservation.reopenable}
-        verifyReference={secure}
-      />
+      {/* Client-owned so a cancel/reinstate swap shows even if the refresh is slow. */}
+      <ReservationActions reservation={reservation} secure={secure} />
     </div>
   )
 }

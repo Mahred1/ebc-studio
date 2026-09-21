@@ -35,8 +35,10 @@ import {
   GOAL_MAX,
   PHONE_PREFIX,
   RESERVATION_FIELDS,
+  RESERVATION_TYPES,
   formatPhoneInput,
   reservationHref,
+  todayInput,
   validateField,
   validateReservation,
   type ReservationDraft,
@@ -50,6 +52,9 @@ type Touched = Partial<Record<keyof ReservationDraft, boolean>>
 
 export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
   const id = React.useId()
+  // Native date inputs can't pick a day before `min`, so past dates are
+  // impossible from the calendar or the keyboard — and validation re-checks it.
+  const today = todayInput()
   const [draft, setDraft] = React.useState<ReservationDraft>(EMPTY_RESERVATION)
   const [errors, setErrors] = React.useState<ReservationErrors>({})
   const [touched, setTouched] = React.useState<Touched>({})
@@ -267,6 +272,112 @@ export function ReservationForm({ channels }: { channels: ChannelOption[] }) {
             </SelectContent>
           </Select>
           <FieldError id={`${id}-channel-error`}>{errors.channel}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.reservationType}>
+          <FieldLabel htmlFor={`${id}-reservationType`}>
+            Reservation type
+          </FieldLabel>
+          <Select
+            items={Object.entries(RESERVATION_TYPES).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+            name="reservationType"
+            value={draft.reservationType || null}
+            onValueChange={(value) => {
+              const reservationType = value ?? ""
+              setField("reservationType", reservationType)
+              // A live event airs without recording — drop any recording day so
+              // a stale date can't ride along if the user toggles back later.
+              if (reservationType !== "recording") {
+                setField("recordingDate", "")
+              }
+            }}
+            onOpenChange={(open) => {
+              if (!open) handleBlur("reservationType")
+            }}
+          >
+            <SelectTrigger
+              id={`${id}-reservationType`}
+              ref={(el) => {
+                fieldRefs.current.reservationType = el
+              }}
+              className="w-full"
+              aria-invalid={!!errors.reservationType}
+              aria-describedby={
+                errors.reservationType ? `${id}-reservationType-error` : undefined
+              }
+            >
+              <SelectValue placeholder="Select a type" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(RESERVATION_TYPES).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError id={`${id}-reservationType-error`}>
+            {errors.reservationType}
+          </FieldError>
+        </Field>
+
+        {draft.reservationType === "recording" ? (
+          <Field data-invalid={!!errors.recordingDate}>
+            <FieldLabel htmlFor={`${id}-recordingDate`}>
+              Recording date
+            </FieldLabel>
+            <Input
+              id={`${id}-recordingDate`}
+              ref={(el) => {
+                fieldRefs.current.recordingDate = el
+              }}
+              name="recordingDate"
+              type="date"
+              min={today}
+              value={draft.recordingDate}
+              aria-invalid={!!errors.recordingDate}
+              aria-describedby={
+                errors.recordingDate ? `${id}-recordingDate-error` : undefined
+              }
+              onChange={(e) => setField("recordingDate", e.target.value)}
+              onBlur={() => handleBlur("recordingDate")}
+            />
+            <FieldDescription>
+              Today or later — the day the studio records.
+            </FieldDescription>
+            <FieldError id={`${id}-recordingDate-error`}>
+              {errors.recordingDate}
+            </FieldError>
+          </Field>
+        ) : null}
+
+        <Field data-invalid={!!errors.broadcastDate}>
+          <FieldLabel htmlFor={`${id}-broadcastDate`}>Broadcast date</FieldLabel>
+          <Input
+            id={`${id}-broadcastDate`}
+            ref={(el) => {
+              fieldRefs.current.broadcastDate = el
+            }}
+            name="broadcastDate"
+            type="date"
+            min={today}
+            value={draft.broadcastDate}
+            aria-invalid={!!errors.broadcastDate}
+            aria-describedby={
+              errors.broadcastDate ? `${id}-broadcastDate-error` : undefined
+            }
+            onChange={(e) => setField("broadcastDate", e.target.value)}
+            onBlur={() => handleBlur("broadcastDate")}
+          />
+          <FieldDescription>
+            Today or later — the day this airs on {draft.channel || "the channel"}.
+          </FieldDescription>
+          <FieldError id={`${id}-broadcastDate-error`}>
+            {errors.broadcastDate}
+          </FieldError>
         </Field>
 
         <Field data-invalid={!!errors.goal}>

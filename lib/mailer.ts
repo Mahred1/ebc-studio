@@ -9,7 +9,12 @@ import { headers } from "next/headers"
 import nodemailer from "nodemailer"
 import type { Transporter } from "nodemailer"
 
-import { CURRENCY, reservationHref } from "@/lib/reservation"
+import {
+  CURRENCY,
+  RESERVATION_TYPES,
+  reservationHref,
+  type ReservationType,
+} from "@/lib/reservation"
 
 /** Gmail's SMTP endpoint — TLS on 465, uses an app password for auth. */
 const SMTP_HOST = "smtp.gmail.com"
@@ -17,6 +22,18 @@ const SMTP_PORT = 465
 
 /** Sender shown on outbound mail, tied to the configured Gmail account. */
 const FROM_NAME = "EBC Studio"
+
+/** Formats the "YYYY-MM-DD" reservation days for an email. */
+function formatDay(day: string): string {
+  const date = new Date(`${day}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return "—"
+  return date.toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+}
 
 // One transport per process, created lazily: the SMTP handshake is slow, and
 // Node's nodemailer keeps the connection warm for reuse across sends.
@@ -47,6 +64,12 @@ export type ReservationMail = {
   channel: string
   location: string
   bid: string
+  /** Whether the booking is a studio recording or a live event. */
+  reservationType: ReservationType
+  /** The day it airs, as "YYYY-MM-DD". */
+  broadcastDate: string
+  /** The day the studio records, as "YYYY-MM-DD" — null for live events. */
+  recordingDate: string | null
 }
 
 /** Each email everyone can get, named after why it fires. */
@@ -173,6 +196,14 @@ export async function sendReservationEmail(
     "",
     `  Reference: ${reference}`,
     `  Channel:   ${channel}`,
+    `  Type:      ${RESERVATION_TYPES[reservation.reservationType]}`,
+    `  Broadcast: ${formatDay(reservation.broadcastDate)}`,
+    // Live events air without a recording — show that instead of a dash.
+    `  Recording: ${
+      reservation.recordingDate
+        ? formatDay(reservation.recordingDate)
+        : "not recording (live)"
+    }`,
     `  Location:  ${location}`,
     `  Bid:       ${CURRENCY.symbol}${bid} ${CURRENCY.code}`,
     "",
@@ -196,6 +227,18 @@ export async function sendReservationEmail(
         <tr>
           <td style="padding: 8px 12px; border: 1px solid #e2e2e2; background: #f7f7f7;">Channel</td>
           <td style="padding: 8px 12px; border: 1px solid #e2e2e2;">${escapeHtml(channel)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; border: 1px solid #e2e2e2; background: #f7f7f7;">Type</td>
+          <td style="padding: 8px 12px; border: 1px solid #e2e2e2;">${escapeHtml(RESERVATION_TYPES[reservation.reservationType])}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; border: 1px solid #e2e2e2; background: #f7f7f7;">Broadcast</td>
+          <td style="padding: 8px 12px; border: 1px solid #e2e2e2;">${escapeHtml(formatDay(reservation.broadcastDate))}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; border: 1px solid #e2e2e2; background: #f7f7f7;">Recording</td>
+          <td style="padding: 8px 12px; border: 1px solid #e2e2e2;">${reservation.recordingDate ? escapeHtml(formatDay(reservation.recordingDate)) : "Not recording (live event)"}</td>
         </tr>
         <tr>
           <td style="padding: 8px 12px; border: 1px solid #e2e2e2; background: #f7f7f7;">Location</td>

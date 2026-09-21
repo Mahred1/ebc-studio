@@ -4,13 +4,14 @@ import Link from "next/link"
 import { cn } from "cn"
 
 import { ReservationStatusBadge } from "@/components/reservation-status-badge"
-import { formatReservationDate } from "@/components/reservation-details"
+import { formatReservationDay } from "@/components/reservation-details"
 import { StatCard } from "@/components/stat-card"
 import { StatGridSkeleton, TableSkeleton } from "@/components/suspense-ui"
 import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth"
 import {
   BOOKING_PERIODS,
+  reservationTypeLabel,
   type AdminStatusFilter,
   type BookingPeriod,
 } from "@/lib/reservation"
@@ -187,7 +188,7 @@ async function BookingsSection({
                   Channel
                 </th>
                 <th scope="col" className="px-5 py-3 font-semibold">
-                  Date
+                  Broadcast
                 </th>
                 <th scope="col" className="px-5 py-3 text-right font-semibold">
                   Actions
@@ -210,12 +211,17 @@ async function BookingsSection({
                   <td className="px-5 py-4 font-mono tracking-widest">
                     {row.reference}
                   </td>
-                  <td className="px-5 py-4 font-medium">{row.fullName}</td>
-                  <td className="px-5 py-4 text-muted-foreground">
-                    {row.channel}
+                  <td className="px-5 py-4">
+                    <p className="font-medium">{row.fullName}</p>
                   </td>
                   <td className="px-5 py-4 text-muted-foreground">
-                    {formatReservationDate(row.createdAt)}
+                    <p>{row.channel}</p>
+                    <p className="text-xs">
+                      {reservationTypeLabel(row.reservationType)}
+                    </p>
+                  </td>
+                  <td className="px-5 py-4 text-muted-foreground">
+                    {formatReservationDay(row.broadcastDate)}
                   </td>
                   <td className="px-5 py-4">
                     <BookingActions

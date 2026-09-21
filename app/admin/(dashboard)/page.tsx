@@ -2,11 +2,14 @@ import { Suspense } from "react"
 import type { Metadata } from "next"
 
 import { PENDING_BADGE_CLASS } from "@/components/reservation-status-badge"
+import {
+  formatReservationDay,
+} from "@/components/reservation-details"
 import { StatCard } from "@/components/stat-card"
 import { StatGridSkeleton, TableSkeleton } from "@/components/suspense-ui"
 import { Badge } from "@/components/ui/badge"
 import { requireAdmin } from "@/lib/auth"
-import { CURRENCY } from "@/lib/reservation"
+import { CURRENCY, reservationTypeLabel } from "@/lib/reservation"
 import { getOverview } from "@/lib/reservations"
 import {
   CalendarDays,
@@ -30,16 +33,6 @@ function money(amount: number): string {
     maximumFractionDigits: 2,
   })
   return `${CURRENCY.symbol}${value} ${CURRENCY.code}`
-}
-
-function formatDate(iso: string): string {
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return "—"
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
 }
 
 const STATUS_BADGE = {
@@ -132,7 +125,7 @@ async function OverviewSection() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-4">
           <h2 className="text-sm font-semibold">Upcoming sessions</h2>
           <p className="text-sm text-muted-foreground">
-            Open and confirmed reservations, newest first
+            Open and confirmed reservations, by airdate
           </p>
         </div>
         <table className="w-full text-sm">
@@ -142,7 +135,7 @@ async function OverviewSection() {
                 Channel
               </th>
               <th scope="col" className="px-5 py-3 font-semibold">
-                Date
+                Broadcast
               </th>
               <th scope="col" className="px-5 py-3 font-semibold">
                 Customer
@@ -155,9 +148,14 @@ async function OverviewSection() {
           <tbody>
             {overview.sessions.map((session) => (
               <tr key={session.reference} className="border-b last:border-0">
-                <td className="px-5 py-4 font-medium">{session.channel}</td>
+                <td className="px-5 py-4">
+                  <p className="font-medium">{session.channel}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {reservationTypeLabel(session.reservationType)}
+                  </p>
+                </td>
                 <td className="px-5 py-4 text-muted-foreground">
-                  {formatDate(session.bookedAt)}
+                  {formatReservationDay(session.broadcastDate)}
                 </td>
                 <td className="px-5 py-4">{session.fullName}</td>
                 <td className="px-5 py-4">

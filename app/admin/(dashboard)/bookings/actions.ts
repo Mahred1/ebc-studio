@@ -38,6 +38,9 @@ async function notifyBooker(code: string, kind: ReservationEmailKind): Promise<v
       channel: true,
       location: true,
       bid: true,
+      reservationType: true,
+      recordingDate: true,
+      broadcastDate: true,
     },
   })
   if (!row) return
@@ -51,6 +54,11 @@ async function notifyBooker(code: string, kind: ReservationEmailKind): Promise<v
       location: row.location,
       // Prisma hands back a Decimal; the mailer wants a fixed-2 string.
       bid: row.bid.toFixed(2),
+      reservationType: row.reservationType,
+      recordingDate: row.recordingDate
+        ? row.recordingDate.toISOString().slice(0, 10)
+        : null,
+      broadcastDate: row.broadcastDate.toISOString().slice(0, 10),
     },
     await getRequestOrigin(),
     kind

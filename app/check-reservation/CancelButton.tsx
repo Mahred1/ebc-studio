@@ -7,16 +7,22 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import type { ReservationView } from "@/lib/reservation"
+
 import { cancelReservationAction } from "./actions"
 
 export default function CancelButton({
   reference,
   status,
   verifyReference = false,
+  onChanged,
 }: {
   reference: string
   status: string
   verifyReference?: boolean
+  /** Called with the fresh reservation once the cancel lands, so the UI can
+   *  swap to the reinstate state without waiting on a router.refresh(). */
+  onChanged?: (reservation: ReservationView) => void
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -42,6 +48,9 @@ export default function CancelButton({
         const res = await cancelReservationAction(reference)
         if (res.ok) {
           toast.success("Reservation canceled.")
+          // Update the local copy first so the correct buttons show the moment
+          // the cancel lands; the refresh just brings unrelated views in sync.
+          onChanged?.(res.reservation)
           router.refresh()
           return
         }

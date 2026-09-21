@@ -20,6 +20,19 @@ export const PHONE_PREFIX = "+251"
 /** Ethiopian national numbers are nine digits. */
 export const PHONE_DIGITS = 9
 
+/**
+ * What kind of spot is being reserved. `recording` is a studio recording
+ * session — the user picks a recording day and an airdate. `live` is a live
+ * event that broadcasts without recording — there is no recording date, only
+ * the airdate. Labels are the two select options on the reserve form.
+ */
+export const RESERVATION_TYPES = {
+  recording: "Studio recording",
+  live: "Live event",
+} as const
+
+export type ReservationType = keyof typeof RESERVATION_TYPES
+
 export type ReservationDraft = {
   fullName: string
   email: string
@@ -28,6 +41,12 @@ export type ReservationDraft = {
   goal: string
   location: string
   bid: string
+  /** "recording" | "live" once picked — "" until the user chooses. */
+  reservationType: string
+  /** The day the studio records, as "YYYY-MM-DD". Blank for live events. */
+  recordingDate: string
+  /** The day the program airs on the picked channel, as "YYYY-MM-DD". */
+  broadcastDate: string
 }
 
 export type ReservationErrors = Partial<Record<keyof ReservationDraft, string>>
@@ -40,6 +59,9 @@ export const EMPTY_RESERVATION: ReservationDraft = {
   goal: "",
   location: "",
   bid: "",
+  reservationType: "",
+  recordingDate: "",
+  broadcastDate: "",
 }
 
 export const GOAL_MIN = 10
@@ -47,6 +69,33 @@ export const GOAL_MAX = 500
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const MONEY_PATTERN = /^\d+(\.\d{1,2})?$/
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/** True when `value` is a real calendar day in "YYYY-MM-DD" form. */
+function isValidDateInput(value: string): boolean {
+  if (!DATE_PATTERN.test(value)) return false
+  const [year, month, day] = value.split("-").map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  )
+}
+
+/**
+ * Today's date as "YYYY-MM-DD". Keyed to UTC so the client form's validation
+ * and the server action's re-check agree on the same "today" boundary — a
+ * same-day booking is never falsely rejected the way a server-relative clock
+ * could, and for the studio's UTC+3 audience local today is never behind UTC.
+ */
+export function todayInput(): string {
+  const now = new Date()
+  const year = now.getUTCFullYear()
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(now.getUTCDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
 
 /** Validates one field. Takes the whole draft so cross-field rules can be added later. */
 export function validateField(
@@ -112,6 +161,34 @@ export function validateField(
       if (Number(bid) <= 0) return "The bid must be greater than 0."
       return undefined
     }
+
+    case "reservationType": {
+      if (
+        draft.reservationType !== "recording" &&
+        draft.reservationType !== "live"
+      )
+        return "Choose whether this is a studio recording or a live event."
+      return undefined
+    }
+
+    case "broadcastDate": {
+      const value = draft.broadcastDate.trim()
+      if (!value) return "Pick the date this will be broadcast."
+      if (!isValidDateInput(value)) return "Enter a valid date, like 2026-09-21."
+      if (value < todayInput()) return "The broadcast date can't be in the past."
+      return undefined
+    }
+
+    case "recordingDate": {
+      // Live events air without recording — the form hides this field for them,
+      // so there's nothing to validate when the reservation is live.
+      if (draft.reservationType !== "recording") return undefined
+      const value = draft.recordingDate.trim()
+      if (!value) return "Pick the day of the studio recording."
+      if (!isValidDateInput(value)) return "Enter a valid date, like 2026-09-21."
+      if (value < todayInput()) return "The recording date can't be in the past."
+      return undefined
+    }
   }
 }
 
@@ -123,6 +200,9 @@ export const RESERVATION_FIELDS = [
   "goal",
   "location",
   "bid",
+  "reservationType",
+  "recordingDate",
+  "broadcastDate",
 ] as const satisfies readonly (keyof ReservationDraft)[]
 
 /** Validates every field. An empty object means the draft is valid. */
@@ -339,11 +419,22 @@ export type ReservationView = {
   goal: string
   location: string
   bid: string
+  /** Whether this is a studio recording or a live event. */
+  reservationType: ReservationType
+  /** The day the studio records, as "YYYY-MM-DD" — null for live events. */
+  recordingDate: string | null
+  /** The day it airs on the picked channel, as "YYYY-MM-DD". */
+  broadcastDate: string
   createdAt: string
   /** True when the booker canceled this and can still reinstate it. */
   reopenable: boolean
   /** True when an admin archived this reservation; hidden from email lookups. */
   archived: boolean
+}
+
+/** The human label for a reservation type ("Studio recording" / "Live event"). */
+export function reservationTypeLabel(type: ReservationType): string {
+  return RESERVATION_TYPES[type]
 }
 
 /**

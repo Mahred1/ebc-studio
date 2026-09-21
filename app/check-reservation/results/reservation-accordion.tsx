@@ -4,8 +4,7 @@ import { useState } from "react"
 import { ChevronDownIcon, LockKeyholeIcon } from "lucide-react"
 import { cn } from "cn"
 
-import CancelButton from "../CancelButton"
-import ReinstateButton from "../ReinstateButton"
+import { ReservationActions } from "@/components/reservation-actions"
 import { CopyCodeButton } from "@/components/copy-code-button"
 import {
   ReservationRows,
@@ -121,15 +120,9 @@ export function ReservationAccordion({
                       {RESERVATION_STATUSES[reservation.status].detail}
                     </p>
                     <ReservationRows reservation={reservation} />
-                    <CancelButton
-                      reference={reservation.reference}
-                      status={reservation.status}
-                      verifyReference={secure}
-                    />
-                    <ReinstateButton
-                      reference={reservation.reference}
-                      reopenable={reservation.reopenable}
-                      verifyReference={secure}
+                    <ReservationActions
+                      reservation={reservation}
+                      secure={secure}
                     />
                   </div>
                 </div>

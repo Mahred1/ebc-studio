@@ -7,16 +7,22 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import type { ReservationView } from "@/lib/reservation"
+
 import { reinstateReservationAction } from "./actions"
 
 export default function ReinstateButton({
   reference,
   reopenable,
   verifyReference = false,
+  onChanged,
 }: {
   reference: string
   reopenable: boolean
   verifyReference?: boolean
+  /** Called with the fresh reservation once the reinstate lands, so the UI can
+   *  swap to the cancel state without waiting on a router.refresh(). */
+  onChanged?: (reservation: ReservationView) => void
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -44,6 +50,7 @@ export default function ReinstateButton({
         const res = await reinstateReservationAction(reference)
         if (res.ok) {
           toast.success("Reservation reinstated.")
+          onChanged?.(res.reservation)
           router.refresh()
           return
         }

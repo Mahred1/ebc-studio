@@ -24,6 +24,14 @@ enum ReservationStatus {
   canceled
 }
 
+/// What kind of spot is being reserved. Drives which dates the reserve form
+/// asks for: a studio recording needs a recording day, a live event goes
+/// straight to air (recordingDate stays null).
+enum ReservationType {
+  recording
+  live
+}
+
 model StudioReservation {
   // Internal primary key. Not exposed to users.
   id Int @id @default(autoincrement())
@@ -49,6 +57,16 @@ model StudioReservation {
   channel  String
   goal     String
   location String
+  /// Whether this is a studio recording session (recordingDate set) or a live
+  /// event that broadcasts without recording (recordingDate null). Required on
+  /// every new reservation.
+  reservationType ReservationType
+  /// The day the studio records the program. Null for live events — the form
+  /// hides the field for those. A plain date: there's no time of day here.
+  recordingDate DateTime? @db.Date
+  /// The day the program airs on the picked channel. Every reservation — live
+  /// or recorded — has one. Also a plain date.
+  broadcastDate DateTime @db.Date
   /// Amount the bidder plans to spend. Decimal for exact money; the UI shows it
   /// as "Br100.00 ETB" (CURRENCY in lib/reservation.ts).
   bid      Decimal @db.Decimal(12, 2)

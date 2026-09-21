@@ -3,10 +3,15 @@
 import { revalidatePath } from "next/cache"
 
 import { cancelReservation, reinstateReservation } from "@/lib/reservations"
+import type { ReservationView } from "@/lib/reservation"
+
+export type CancelReservationResult =
+  | { ok: true; reservation: ReservationView }
+  | { ok: false; error: string }
 
 export async function cancelReservationAction(
   reference: string
-): Promise<{ ok: boolean; reservation?: unknown; error?: string }> {
+): Promise<CancelReservationResult> {
   try {
     const reservation = await cancelReservation(reference)
     if (!reservation) return { ok: false, error: "Reservation not found or not cancelable." }
@@ -21,9 +26,13 @@ export async function cancelReservationAction(
   }
 }
 
+export type ReinstateReservationResult =
+  | { ok: true; reservation: ReservationView }
+  | { ok: false; error: string }
+
 export async function reinstateReservationAction(
   reference: string
-): Promise<{ ok: boolean; reservation?: unknown; error?: string }> {
+): Promise<ReinstateReservationResult> {
   try {
     const reservation = await reinstateReservation(reference)
     if (!reservation) return { ok: false, error: "This reservation can't be reinstated." }
